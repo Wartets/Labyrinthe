@@ -1,74 +1,81 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Labyrinthe • Algorithme génétique</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="./style.css" />
+	<meta charset="UTF-8" />
+	<title>Labyrinthe • Algorithme génétique</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <header>
-    <h1>Résolution de Labyrinthe par Algorithme Génétique</h1>
-  </header>
+	<header>
+	<h1>Résolution de Labyrinthe par Algorithme Génétique</h1>
+	</header>
 
-  <section class="controls">
-    <div class="block">
-      <h2>Génération du labyrinthe</h2>
-      <label>Rows (impair) :
-        <input type="number" id="rows" min="5" step="2" value="31">
-      </label>
-      <label>Cols (impair) :
-        <input type="number" id="cols" min="5" step="2" value="41">
-      </label>
-      <label>Seed :
-        <input type="number" id="seedMaze" placeholder="optionnel">
-      </label>
-      <button id="btnGenerate">Générer</button>
-      <span id="mazeInfo"></span>
-    </div>
+	<main class="main-container">
+	<section class="controls left-controls">
+		<div class="block">
+		<h2>Génération du labyrinthe</h2>
+		<label>Rows (impair) :
+			<input type="number" id="rows" min="5" step="2" value="17">
+		</label>
+		<label>Cols (impair) :
+			<input type="number" id="cols" min="5" step="2" value="21">
+		</label>
+		<label>Seed :
+			<input type="number" id="seedMaze" placeholder="optionnel">
+		</label>
+		<label>Ouverture (0.0-1.0) :
+			<input type="number" id="openness" min="0" max="1" step="0.01" value="0.0">
+		</label>
+		<label>Fermeture (0.0-1.0) :
+			<input type="number" id="closeness" min="0" max="1" step="0.01" value="0.0">
+		</label>
+		<button id="btnGenerate">Générer</button>
+		<span id="mazeInfo"></span>
+		</div>
+	</section>
 
-    <div class="block">
-      <h2>Algorithme génétique</h2>
-      <div class="grid">
-        <label>Population :
-          <input type="number" id="pop" min="10" step="10" value="150">
-        </label>
-        <label>Générations :
-          <input type="number" id="gens" min="1" step="10" value="150">
-        </label>
-        <label>Longueur max (steps) :
-          <input type="number" id="steps" min="50" step="50" value="800">
-        </label>
-        <label>Taux mutation :
-          <input type="number" id="mut" min="0" max="1" step="0.01" value="0.03">
-        </label>
-        <label>Élitisme :
-          <input type="number" id="elit" min="0" step="1" value="2">
-        </label>
-        <label>Tournament k :
-          <input type="number" id="tk" min="2" step="1" value="3">
-        </label>
-        <label>Seed GA :
-          <input type="number" id="seedGA" placeholder="optionnel">
-        </label>
-        <label>Historique :
-          <input type="checkbox" id="history" checked>
-        </label>
-      </div>
-      <button id="btnSolve">Résoudre</button>
-      <span id="solveInfo"></span>
-    </div>
-  </section>
+	<section class="canvas-container">
+		<div class="canvas-wrap">
+		<canvas id="mazeCanvas" width="820" height="620"></canvas>
+		</div>
+	</section>
 
-  <section class="canvas-wrap">
-    <canvas id="mazeCanvas" width="820" height="620"></canvas>
-  </section>
+	<section class="controls right-controls">
+		<div class="block">
+		<h2>Algorithme génétique</h2>
+		<div class="grid">
+			<label>Population :
+			<input type="number" id="pop" min="10" step="10" value="20">
+			</label>
+			<label>Générations :
+			<input type="number" id="gens" min="1" step="10" value="1000">
+			</label>
+			<label>Longueur max (steps) :
+			<input type="number" id="steps" min="50" step="50" value="800">
+			</label>
+			<label>Taux mutation :
+			<input type="number" id="mut" min="0" max="1" step="0.01" value="0.03">
+			</label>
+			<label>Élitisme :
+			<input type="number" id="elit" min="0" step="1" value="2">
+			</label>
+			<label>Tournament k :
+			<input type="number" id="tk" min="2" step="1" value="3">
+			</label>
+			<label>Seed GA :
+			<input type="number" id="seedGA" placeholder="optionnel">
+			</label>
+			<label>Historique :
+			<input type="checkbox" id="history" checked>
+			</label>
+		</div>
+		<button id="btnSolve">Résoudre</button>
+		<span id="solveInfo"></span>
+		</div>
+	</section>
+	</main>
 
-  <footer>
-    <small>© Projet démo — DFS + Algorithme génétique. </small>
-  </footer>
-
-  <script src="./script.js"></script>
+	<script src="./script.js"></script>
 </body>
 </html>
