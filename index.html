@@ -48,14 +48,13 @@
         </header>
 
         <main>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
                 
                 <!-- Panneau de génération du labyrinthe -->
-                <div class="order-1 lg:order-1">
+                <div id="generationPanel" class="order-1 md:order-2 lg:order-1">
                     <div class="control-panel-bg p-6 rounded-lg shadow-md border border-color sticky top-8">
                         <h2 class="text-xl font-bold mb-4 text-gray-800">Génération du Labyrinthe</h2>
-                        
-                        <div class="space-y-6">
+                        <div class="space-y-6 md:max-h-[calc(100vh-200px)] md:overflow-y-auto overflow-y-visible">
                             <div>
                                 <label for="mazeSize" class="block text-sm font-medium text-gray-700">Taille du Labyrinthe: <span id="mazeSizeValue" class="font-bold accent-color">21x21</span></label>
                                 <input id="mazeSize" type="range" min="11" max="51" step="2" value="21" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
@@ -94,7 +93,7 @@
                 </div>
 
                 <!-- Zone d'affichage du labyrinthe -->
-                <div class="md:col-span-1 order-2 lg:col-span-1 lg:order-2">
+                <div id="mazeContainer" class="md:col-span-1 order-2 lg:col-span-1 lg:order-2">
                     <div class="bg-white p-4 rounded-lg shadow-md border border-color">
                         <canvas id="mazeCanvas" class="w-full h-auto aspect-square rounded"></canvas>
                     </div>
@@ -102,11 +101,10 @@
                 </div>
 
                 <!-- Panneau de recherche de solution -->
-                <div class="order-3 md:col-span-1 lg:order-3">
+                <div id="solutionPanel" class="order-3 md:order-3 lg:order-3">
                     <div class="control-panel-bg p-6 rounded-lg shadow-md border border-color sticky top-8">
                         <h2 class="text-xl font-bold mb-4 text-gray-800">Recherche de Solution (Algorithme Génétique)</h2>
-                        
-                        <div class="space-y-6">
+                        <div class="space-y-6 md:max-h-[calc(100vh-200px)] md:overflow-y-auto overflow-y-visible">
                             <div>
                                 <label for="populationSize" class="block text-sm font-medium text-gray-700">Taille Population: <span id="populationSizeValue" class="font-bold accent-color">100</span></label>
                                 <input id="populationSize" type="range" min="50" max="500" step="10" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
