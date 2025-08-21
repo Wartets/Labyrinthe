@@ -1,0 +1,28 @@
+body {
+	font-family: 'Inter', sans-serif;
+	background-color: #d7d7db;
+	color: #242424;
+}
+.control-panel-bg { background-color: #f8f7fa; }
+.btn-primary { background-color: #7980a8; color: #f8f7fa; }
+.btn-primary:hover { background-color: #8E7361; }
+.btn-secondary { background-color: #EFEBE8; color: #6B6B6B; }
+.btn-secondary:hover { background-color: #DCD6D1; }
+.accent-color { color: #7980a8; }
+.border-color { border-color: #DCD6D1; }
+.slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 20px;
+	height: 20px;
+	background: #7980a8;
+	cursor: pointer;
+	border-radius: 50%;
+}
+.slider::-moz-range-thumb {
+	width: 20px;
+	height: 20px;
+	background: #7980a8;
+	cursor: pointer;
+	border-radius: 50%;
+}

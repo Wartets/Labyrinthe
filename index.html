@@ -5,126 +5,33 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Résolution de Labyrinthe</title>
 	<script src="https://cdn.tailwindcss.com"></script>
-	<style>
-		:root {
-		  --spacing-unit: 8px;
-		  --max-width: 1200px;
-		  --grid-gap: calc(var(--spacing-unit) * 4);
-		  --border-radius: 8px;
-		  --transition-speed: 0.3s;
-		}
-
-		* {
-		  margin: 0;
-		  padding: 0;
-		  box-sizing: border-box;
-		}
-
-		.container {
-		  max-width: var(--max-width);
-		  margin: 0 auto;
-		  padding: calc(var(--spacing-unit) * 4);
-		}
-
-		.grid {
-		  display: grid;
-		  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		  gap: var(--grid-gap);
-		}
-
-		body {
-		  font-family: 'Inter', sans-serif;
-		  font-weight: 400;
-		  line-height: 1.6;
-		  color: #111;
-		  background-color: #fefefe;
-		}
-
-		h1, h2, h3 {
-		  font-weight: 600;
-		  line-height: 1.2;
-		  margin-bottom: calc(var(--spacing-unit) * 2);
-		}
-
-		p {
-		  font-weight: 400;
-		  line-height: 1.5;
-		  margin-bottom: calc(var(--spacing-unit) * 3);
-		}
-
-		.btn {
-		  display: inline-block;
-		  padding: calc(var(--spacing-unit) * 2) calc(var(--spacing-unit) * 4);
-		  font-weight: 500;
-		  font-size: 1rem;
-		  text-align: center;
-		  text-decoration: none;
-		  border-radius: var(--border-radius);
-		  background-color: #0066ff;
-		  color: #fff;
-		  transition: background-color var(--transition-speed), transform var(--transition-speed);
-		}
-
-		.btn:hover,
-		.btn:focus {
-		  background-color: #0055cc;
-		  transform: translateY(-2px);
-		}
-
-		.card {
-		  padding: calc(var(--spacing-unit) * 4);
-		  border-radius: var(--border-radius);
-		  background-color: #fff;
-		  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-		  transition: transform var(--transition-speed), box-shadow var(--transition-speed);
-		}
-
-		.card:hover,
-		.card:focus {
-		  transform: translateY(-2px);
-		  box-shadow: 0 8px 16px rgba(0,0,0,0.08);
-		}
-
-		header, footer {
-		  padding: calc(var(--spacing-unit) * 6) 0;
-		}
-
-		#hero {
-		  text-align: center;
-		  padding: calc(var(--spacing-unit) * 12) 0;
-		}
-
-		@media (max-width: 768px) {
-		  .container {
-			padding: calc(var(--spacing-unit) * 2);
-		  }
-
-		  #hero {
-			padding: calc(var(--spacing-unit) * 8) 0;
-		  }
-		}
-	</style>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body class="antialiased">
 
 	<div class="container mx-auto p-4 md:p-8">
 		
 		<header class="text-center mb-8">
-			<h1 class="text-3xl md:text-4xl font-bold accent-color mb-2">Résolution de Labyrinthe</h1>
+			<h1 class="text-3xl md:text-4xl font-bold accent-color mb-2">Exploration et Résolution de Labyrinthes</h1>
+			<p class="text-xl text-gray-700">Approche évolutionnaire par algorithme génétique</p>
 		</header>
 
 		<main>
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
 				
-				<!-- Panneau de génération du labyrinthe -->
 				<div id="generationPanel" class="order-1 md:order-2 md:col-start-2 lg:order-1 lg:col-start-auto">
 					<div class="control-panel-bg p-6 rounded-lg shadow-md border border-color sticky top-8">
 						<h2 class="text-xl font-bold mb-4 text-gray-800">Génération du Labyrinthe</h2>
 						<div class="space-y-6 md:max-h-[calc(100vh-200px)] md:overflow-y-auto overflow-y-visible">
 							<div>
-								<label for="mazeSize" class="block text-sm font-medium text-gray-700">Taille du Labyrinthe: <span id="mazeSizeValue" class="font-bold accent-color">21x21</span></label>
-								<input id="mazeSize" type="range" min="11" max="51" step="2" value="21" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-								<p class="text-xs text-gray-500 mt-1">Définit la largeur et la hauteur de la grille du labyrinthe.</p>
+								<label for="mazeAlgorithm" class="block text-sm font-medium text-gray-700">Algorithme de Génération:</label>
+								<select id="mazeAlgorithm" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-accent-color focus:border-accent-color">
+									<option value="dfs">DFS (Parcours en Profondeur)</option>
+									<option value="prim">Prim's Algorithm</option>
+									<option value="kruskal">Kruskal's Algorithm</option>
+									<option value="recursiveBacktracker">Recursive Backtracker</option>
+								</select>
+								<p class="text-xs text-gray-500 mt-1">Choisissez l'algorithme pour générer le labyrinthe.</p>
 							</div>
 
 							<div class="border-t border-color pt-4 mt-4">
@@ -134,14 +41,9 @@
 							</div>
 
 							<div class="border-t border-color pt-4 mt-4">
-								<label for="mazeAlgorithm" class="block text-sm font-medium text-gray-700">Algorithme de Génération:</label>
-								<select id="mazeAlgorithm" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-accent-color focus:border-accent-color">
-									<option value="dfs">DFS (Parcours en Profondeur)</option>
-									<option value="prim">Prim's Algorithm</option>
-									<option value="kruskal">Kruskal's Algorithm</option>
-									<option value="recursiveBacktracker">Recursive Backtracker</option>
-								</select>
-								<p class="text-xs text-gray-500 mt-1">Choisissez l'algorithme pour générer le labyrinthe.</p>
+								<label for="mazeSize" class="block text-sm font-medium text-gray-700">Taille du Labyrinthe: <span id="mazeSizeValue" class="font-bold accent-color">21x21</span></label>
+								<input id="mazeSize" type="range" min="5" max="101" step="2" value="21" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<p class="text-xs text-gray-500 mt-1">Définit la largeur et la hauteur de la grille du labyrinthe.</p>
 							</div>
 
 							<div class="border-t border-color pt-4 mt-4">
@@ -158,7 +60,6 @@
 					</div>
 				</div>
 
-				<!-- Zone d'affichage du labyrinthe -->
 				<div id="mazeContainer" class="order-2 md:order-1 md:col-start-1 lg:order-2 lg:col-start-auto">
 					<div class="bg-white p-4 rounded-lg shadow-md border border-color">
 						<canvas id="mazeCanvas" class="w-full h-auto aspect-square rounded"></canvas>
@@ -166,38 +67,37 @@
 				   <div id="status-message" class="text-center mt-4 font-medium text-gray-700 h-6"></div>
 				</div>
 
-				<!-- Panneau de recherche de solution -->
 				<div id="solutionPanel" class="order-3 md:order-3 md:col-start-2 lg:order-3 lg:col-start-auto">
 					<div class="control-panel-bg p-6 rounded-lg shadow-md border border-color sticky top-8">
 						<h2 class="text-xl font-bold mb-4 text-gray-800">Recherche de Solution (Algorithme Génétique)</h2>
 						<div class="space-y-6 md:max-h-[calc(100vh-200px)] md:overflow-y-auto overflow-y-visible">
 							<div>
 								<label for="populationSize" class="block text-sm font-medium text-gray-700">Taille Population: <span id="populationSizeValue" class="font-bold accent-color">100</span></label>
-								<input id="populationSize" type="range" min="50" max="500" step="10" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<input id="populationSize" type="range" min="50" max="1000" step="5" value="100" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
 								<p class="text-xs text-gray-500 mt-1">Nombre d'individus (chemins) dans chaque génération de l'algorithme génétique.</p>
 							</div>
 
 							<div>
 								<label for="generations" class="block text-sm font-medium text-gray-700">Générations: <span id="generationsValue" class="font-bold accent-color">50</span></label>
-								<input id="generations" type="range" min="10" max="200" step="5" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<input id="generations" type="range" min="10" max="1000" step="5" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
 								<p class="text-xs text-gray-500 mt-1">Nombre d'itérations d'évolution pour trouver une solution.</p>
 							</div>
 
 							<div>
 								<label for="mutationRate" class="block text-sm font-medium text-gray-700">Taux de Mutation: <span id="mutationRateValue" class="font-bold accent-color">5%</span></label>
-								<input id="mutationRate" type="range" min="1" max="20" step="1" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<input id="mutationRate" type="range" min="1" max="100" step="0.1" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
 								<p class="text-xs text-gray-500 mt-1">Probabilité qu'un mouvement aléatoire soit introduit dans un chromosome.</p>
 							</div>
 
 							<div>
 								<label for="tournamentSize" class="block text-sm font-medium text-gray-700">Taille du Tournoi: <span id="tournamentSizeValue" class="font-bold accent-color">5</span></label>
-								<input id="tournamentSize" type="range" min="2" max="20" step="1" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<input id="tournamentSize" type="range" min="2" max="50" step="1" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
 								<p class="text-xs text-gray-500 mt-1">Nombre d'individus en compétition pour la sélection.</p>
 							</div>
 
 							<div>
 								<label for="elitismRate" class="block text-sm font-medium text-gray-700">Taux d'Élitisme: <span id="elitismRateValue" class="font-bold accent-color">10%</span></label>
-								<input id="elitismRate" type="range" min="0" max="50" step="1" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<input id="elitismRate" type="range" min="0" max="50" step="0.1" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
 								<p class="text-xs text-gray-500 mt-1">Pourcentage des meilleurs individus conservés directement.</p>
 							</div>
 
@@ -212,645 +112,6 @@
 					</div>
 				</div>
 			</div>
-		</main>
-	</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-	const canvas = document.getElementById('mazeCanvas');
-	const ctx = canvas.getContext('2d');
-
-	const mazeSizeSlider = document.getElementById('mazeSize');
-	const mazeSizeValue = document.getElementById('mazeSizeValue');
-	const opennessRateSlider = document.getElementById('opennessRate');	
-	const opennessRateValue = document.getElementById('opennessRateValue');
-	const mazeAlgorithmSelect = document.getElementById('mazeAlgorithm');
-	const seedInput = document.getElementById('seedInput');
-	const randomSeedBtn = document.getElementById('randomSeedBtn');
-
-	const populationSizeSlider = document.getElementById('populationSize');
-	const populationSizeValue = document.getElementById('populationSizeValue');
-	const generationsSlider = document.getElementById('generations');
-	const generationsValue = document.getElementById('generationsValue');
-	const mutationRateSlider = document.getElementById('mutationRate');
-	const mutationRateValue = document.getElementById('mutationRateValue');
-
-	const tournamentSizeSlider = document.getElementById('tournamentSize');
-	const tournamentSizeValue = document.getElementById('tournamentSizeValue');
-	const elitismRateSlider = document.getElementById('elitismRate');
-	const elitismRateValue = document.getElementById('elitismRateValue');
-
-	const pathLengthMultiplierSlider = document.getElementById('pathLengthMultiplier');
-	const pathLengthMultiplierValue = document.getElementById('pathLengthMultiplierValue');
-	
-	const generateBtn = document.getElementById('generateBtn');
-	const solveBtn = document.getElementById('solveBtn');
-	const statusMessage = document.getElementById('status-message');
-
-	const WALL = 1;
-	const PATH = 0;
-
-	let maze, start, end, size;
-	let cellSize;
-	let isSolving = false;
-
-	let currentSeed = Date.now();
-
-	function setSeed(seed) {
-		currentSeed = seed;
-	}
-
-	function seededRandom() {
-		currentSeed = (currentSeed * 9301 + 49297) % 233280;
-		return currentSeed / 233280;
-	}
-
-	const updateSliderValue = (slider, display, formatter) => {
-		display.textContent = formatter(slider.value);
-		slider.addEventListener('input', (e) => {
-			display.textContent = formatter(e.target.value);
-		});
-	};
-
-	updateSliderValue(mazeSizeSlider, mazeSizeValue, v => `${v}x${v}`);
-	updateSliderValue(opennessRateSlider, opennessRateValue, v => `${v}%`);
-	updateSliderValue(populationSizeSlider, populationSizeValue, v => v);
-	updateSliderValue(generationsSlider, generationsValue, v => v);
-	updateSliderValue(mutationRateSlider, mutationRateValue, v => `${v}%`);
-	updateSliderValue(tournamentSizeSlider, tournamentSizeValue, v => v);
-	updateSliderValue(elitismRateSlider, elitismRateValue, v => `${v}%`);
-	updateSliderValue(pathLengthMultiplierSlider, pathLengthMultiplierValue, v => `${v}x`);
-	
-	randomSeedBtn.addEventListener('click', () => {
-		const newSeed = Math.floor(Math.random() * 1000000000);
-		seedInput.value = newSeed;
-		setSeed(newSeed);
-	});
-
-	seedInput.addEventListener('input', () => {
-		const seedVal = parseInt(seedInput.value);
-		if (!isNaN(seedVal)) {
-			setSeed(seedVal);
-		} else {
-			setSeed(Date.now());	
-		}
-	});
-
-	function generateMazeDFS(width, height, opennessPercent, currentMazeSeed) {
-		setSeed(currentMazeSeed);
-
-		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
-		let stack = [];
-		let startX = 1, startY = 1;
-
-		mazeGrid[startY][startX] = PATH;
-		stack.push([startX, startY]);
-
-		while (stack.length > 0) {
-			let [x, y] = stack[stack.length - 1];
-			let neighbors = [];
-
-			[[x, y - 2], [x, y + 2], [x - 2, y], [x + 2, y]].forEach(([nx, ny]) => {
-				if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && mazeGrid[ny][nx] === WALL) {
-					neighbors.push([nx, ny]);
-				}
-			});
-
-			if (neighbors.length > 0) {
-				let [nextX, nextY] = neighbors[Math.floor(seededRandom() * neighbors.length)];
-				mazeGrid[nextY][nextX] = PATH;
-				mazeGrid[y + (nextY - y) / 2][x + (nextX - x) / 2] = PATH;
-				stack.push([nextX, nextY]);
-			} else {
-				stack.pop();
-			}
-		}
-		
-		start = { x: 1, y: 1 };
-		end = { x: width - 2, y: height - 2 };
-		mazeGrid[start.y][start.x] = PATH;
-		mazeGrid[end.y][end.x] = PATH;
-		
-		if (mazeGrid[height - 3][width - 2] === WALL) mazeGrid[height - 3][width - 2] = PATH;
-		if (mazeGrid[height - 2][width - 3] === WALL) mazeGrid[height - 2][width - 3] = PATH;
-
-		const opennessThreshold = opennessPercent / 100;
-		for (let y = 1; y < height - 1; y++) {
-			for (let x = 1; x < width - 1; x++) {
-				if (mazeGrid[y][x] === WALL) {
-					let pathNeighbors = 0;
-					if (y > 0 && mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
-					if (y < height-1 && mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
-					if (x > 0 && mazeGrid[y][x-1] === PATH) pathNeighbors++;
-					if (x < width-1 && mazeGrid[y][x+1] === PATH) pathNeighbors++;
-					
-					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
-						mazeGrid[y][x] = PATH;
-					}
-				}
-			}
-		}
-		return mazeGrid;
-	}
-
-	function generateMazePrim(width, height, opennessPercent, currentMazeSeed) {
-		setSeed(currentMazeSeed);
-		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
-		let frontier = []; 
-
-		for (let y = 0; y < height; y++) {
-			for (let x = 0; x < width; x++) {
-				mazeGrid[y][x] = WALL;
-			}
-		}
-
-		let startCellX = Math.floor(seededRandom() * ((width - 2) / 2)) * 2 + 1;
-		let startCellY = Math.floor(seededRandom() * ((height - 2) / 2)) * 2 + 1;
-
-		mazeGrid[startCellY][startCellX] = PATH;
-
-		function addWallsToFrontier(x, y) {
-			const potentialWalls = [
-				{wallX: x, wallY: y - 1, nextCellX: x, nextCellY: y - 2},
-				{wallX: x, wallY: y + 1, nextCellX: x, nextCellY: y + 2},
-				{wallX: x - 1, wallY: y, nextCellX: x - 2, nextCellY: y},
-				{wallX: x + 1, wallY: y, nextCellX: x + 2, nextCellY: y}
-			];
-
-			potentialWalls.forEach(pWall => {
-				if (pWall.wallX > 0 && pWall.wallX < width - 1 && pWall.wallY > 0 && pWall.wallY < height - 1) {
-					if (mazeGrid[pWall.wallY][pWall.wallX] === WALL && 
-						pWall.nextCellY > 0 && pWall.nextCellY < height - 1 &&
-						pWall.nextCellX > 0 && pWall.nextCellX < width - 1 &&
-						mazeGrid[pWall.nextCellY][pWall.nextCellX] === WALL) {
-						
-						frontier.push({wallX: pWall.wallX, wallY: pWall.wallY, nextCellX: pWall.nextCellX, nextCellY: pWall.nextCellY});
-					}
-				}
-			});
-		}
-
-		addWallsToFrontier(startCellX, startCellY);
-
-		while (frontier.length > 0) {
-			const randomIndex = Math.floor(seededRandom() * frontier.length);
-			const {wallX, wallY, nextCellX, nextCellY} = frontier[randomIndex];
-
-			if (mazeGrid[nextCellY][nextCellX] === WALL) {
-				mazeGrid[wallY][wallX] = PATH;
-				mazeGrid[nextCellY][nextCellX] = PATH;
-				addWallsToFrontier(nextCellX, nextCellY);
-			}
-			frontier.splice(randomIndex, 1);
-		}
-
-		for (let i = 0; i < width; i++) {
-			mazeGrid[0][i] = WALL;
-			mazeGrid[height - 1][i] = WALL;
-		}
-		for (let i = 0; i < height; i++) {
-			mazeGrid[i][0] = WALL;
-			mazeGrid[i][width - 1] = WALL;
-		}
-
-		start = { x: 1, y: 1 };
-		end = { x: width - 2, y: height - 2 };
-		mazeGrid[start.y][start.x] = PATH;
-		mazeGrid[end.y][end.x] = PATH;
-
-		const opennessThreshold = opennessPercent / 100;
-		for (let y = 1; y < height - 1; y++) {
-			for (let x = 1; x < width - 1; x++) {
-				if (mazeGrid[y][x] === WALL) {
-					let pathNeighbors = 0;
-					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
-					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
-					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
-					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
-					
-					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
-						mazeGrid[y][x] = PATH;
-					}
-				}
-			}
-		}
-		return mazeGrid;
-	}
-
-	function generateMazeKruskal(width, height, opennessPercent, currentMazeSeed) {
-		setSeed(currentMazeSeed);
-		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
-		
-		for (let y = 0; y < height; y++) {
-			for (let x = 0; x < width; x++) {
-				mazeGrid[y][x] = WALL;
-			}
-		}
-
-		const sets = new Map();
-		let nextSetId = 0;
-
-		let walls = [];
-
-		for (let y = 1; y < height - 1; y += 2) {
-			for (let x = 1; x < width - 1; x += 2) {
-				mazeGrid[y][x] = PATH;
-				sets.set(`${x},${y}`, nextSetId++);
-
-				if (x + 2 < width - 1) {
-					walls.push({ x1: x, y1: y, x2: x + 2, y2: y, wallX: x + 1, wallY: y });
-				}
-				if (y + 2 < height - 1) {
-					walls.push({ x1: x, y1: y, x2: x, y2: y + 2, wallX: x, wallY: y + 1 });
-				}
-			}
-		}
-
-		for (let i = walls.length - 1; i > 0; i--) {
-			const j = Math.floor(seededRandom() * (i + 1));
-			[walls[i], walls[j]] = [walls[j], walls[i]];
-		}
-
-		function findSet(cell) {
-			const id = sets.get(`${cell.x},${cell.y}`);
-			return id;
-		}
-
-		function unionSets(cell1, cell2, wall) {
-			const set1 = findSet(cell1);
-			const set2 = findSet(cell2);
-
-			if (set1 !== set2) {
-				mazeGrid[wall.wallY][wall.wallX] = PATH;
-
-				for (let [key, value] of sets.entries()) {
-					if (value === set2) {
-						sets.set(key, set1);
-					}
-				}
-				return true;
-			}
-			return false;
-		}
-
-		for (const wall of walls) {
-			const cell1 = { x: wall.x1, y: wall.y1 };
-			const cell2 = { x: wall.x2, y: wall.y2 };
-
-			unionSets(cell1, cell2, wall);
-		}
-
-		start = { x: 1, y: 1 };
-		end = { x: width - 2, y: height - 2 };
-		mazeGrid[start.y][start.x] = PATH;
-		mazeGrid[end.y][end.x] = PATH;
-
-		const opennessThreshold = opennessPercent / 100;
-		for (let y = 1; y < height - 1; y++) {
-			for (let x = 1; x < width - 1; x++) {
-				if (mazeGrid[y][x] === WALL) {
-					let pathNeighbors = 0;
-					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
-					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
-					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
-					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
-					
-					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
-						mazeGrid[y][x] = PATH;
-					}
-				}
-			}
-		}
-		return mazeGrid;
-	}
-
-	function generateMazeRecursiveBacktracker(width, height, opennessPercent, currentMazeSeed) {
-		setSeed(currentMazeSeed);
-		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
-
-		for (let y = 0; y < height; y++) {
-			for (let x = 0; x < width; x++) {
-				mazeGrid[y][x] = WALL;
-			}
-		}
-
-		let currentX = Math.floor(seededRandom() * ((width - 2) / 2)) * 2 + 1;
-		let currentY = Math.floor(seededRandom() * ((height - 2) / 2)) * 2 + 1;
-		
-		let stack = [];
-		stack.push([currentX, currentY]);
-		mazeGrid[currentY][currentX] = PATH;
-
-		while (stack.length > 0) {
-			let [x, y] = stack[stack.length - 1];
-			let neighbors = [];
-
-			[[x, y - 2], [x, y + 2], [x - 2, y], [x + 2, y]].forEach(([nx, ny]) => {
-				if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && mazeGrid[ny][nx] === WALL) {
-					neighbors.push([nx, ny]);
-				}
-			});
-
-			if (neighbors.length > 0) {
-				let [nextX, nextY] = neighbors[Math.floor(seededRandom() * neighbors.length)];
-				mazeGrid[y + (nextY - y) / 2][x + (nextX - x) / 2] = PATH;
-				mazeGrid[nextY][nextX] = PATH;
-				stack.push([nextX, nextY]);
-			} else {
-				stack.pop();
-			}
-		}
-
-		start = { x: 1, y: 1 };
-		end = { x: width - 2, y: height - 2 };
-		mazeGrid[start.y][start.x] = PATH;
-		mazeGrid[end.y][end.x] = PATH;
-
-		const opennessThreshold = opennessPercent / 100;
-		for (let y = 1; y < height - 1; y++) {
-			for (let x = 1; x < width - 1; x++) {
-				if (mazeGrid[y][x] === WALL) {
-					let pathNeighbors = 0;
-					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
-					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
-					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
-					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
-					
-					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
-						mazeGrid[y][x] = PATH;
-					}
-				}
-			}
-		}
-		return mazeGrid;
-	}
-
-	function drawMaze() {
-		if (!maze) return;
-		canvas.width = canvas.clientWidth;
-		canvas.height = canvas.clientHeight;
-		cellSize = canvas.width / size;
-
-		for (let y = 0; y < size; y++) {
-			for (let x = 0; x < size; x++) {
-				ctx.fillStyle = maze[y][x] === WALL ? '#4A4A4A' : '#FFFFFF';
-				ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-			}
-		}
-
-		ctx.fillStyle = '#4CAF50';
-		ctx.fillRect(start.x * cellSize, start.y * cellSize, cellSize, cellSize);
-		
-		ctx.fillStyle = '#F44336';
-		ctx.fillRect(end.x * cellSize, end.y * cellSize, cellSize, cellSize);
-	}
-
-	function drawPath(path, color = 'rgba(168, 139, 121, 0.7)') {
-		if (!path || path.length === 0) return;
-		ctx.lineWidth = cellSize * 0.4;
-		ctx.strokeStyle = color;
-		ctx.lineCap = 'round';
-		ctx.lineJoin = 'round';
-
-		ctx.beginPath();
-		ctx.moveTo((path[0].x + 0.5) * cellSize, (path[0].y + 0.5) * cellSize);
-		for (let i = 1; i < path.length; i++) {
-			ctx.lineTo((path[i].x + 0.5) * cellSize, (path[i].y + 0.5) * cellSize);
-		}
-		ctx.stroke();
-	}
-
-	function initNewMaze() {
-		size = parseInt(mazeSizeSlider.value);
-		const openness = parseInt(opennessRateSlider.value);
-		let currentMazeSeed = parseInt(seedInput.value);
-		if (isNaN(currentMazeSeed)) {
-			currentMazeSeed = Date.now();
-			seedInput.value = currentMazeSeed;
-		}
-		setSeed(currentMazeSeed);
-
-		const selectedAlgorithm = mazeAlgorithmSelect.value;
-		switch (selectedAlgorithm) {
-			case 'dfs':
-				maze = generateMazeDFS(size, size, openness, currentMazeSeed);
-				break;
-			case 'prim':
-				maze = generateMazePrim(size, size, openness, currentMazeSeed);
-				break;
-			case 'kruskal':
-				maze = generateMazeKruskal(size, size, openness, currentMazeSeed);
-				break;
-			case 'recursiveBacktracker':
-				maze = generateMazeRecursiveBacktracker(size, size, openness, currentMazeSeed);
-				break;
-			default:
-				maze = generateMazeDFS(size, size, openness, currentMazeSeed);
-		}
-		
-		drawMaze();
-		statusMessage.textContent = ""; 
-	}
-
-	generateBtn.addEventListener('click', initNewMaze);
-
-	solveBtn.addEventListener('click', async () => {
-		if (!maze) {
-			const messageBox = document.createElement('div');
-			messageBox.style.cssText = `
-				position: fixed;
-				top: 50%;
-				left: 50%;
-				transform: translate(-50%, -50%);
-				background-color: white;
-				padding: 20px;
-				border-radius: 8px;
-				box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-				z-index: 1000;
-				text-align: center;
-				border: 1px solid #DCD6D1;
-			`;
-			messageBox.innerHTML = `
-				<p class="text-gray-800 text-lg mb-4">Veuillez d'abord générer un labyrinthe.</p>
-				<button class="btn-primary py-2 px-4 rounded-lg" onclick="this.parentNode.remove()">OK</button>
-			`;
-			document.body.appendChild(messageBox);
-			return;
-		}
-		if (isSolving) return;
-
-		isSolving = true;
-		solveBtn.disabled = true;
-		generateBtn.disabled = true;
-		solveBtn.textContent = "Résolution en cours...";
-		solveBtn.classList.replace('btn-primary', 'btn-secondary');
-		statusMessage.textContent = "Initialisation de l'algorithme...";
-		
-		await new Promise(resolve => setTimeout(resolve, 100));
-
-		const populationSize = parseInt(populationSizeSlider.value);
-		const numGenerations = parseInt(generationsSlider.value);
-		const mutationRate = parseInt(mutationRateSlider.value) / 100;
-		const tournamentSize = parseInt(tournamentSizeSlider.value);
-		const elitismRate = parseInt(elitismRateSlider.value) / 100;
-		const pathLengthMultiplier = parseInt(pathLengthMultiplierSlider.value);
-		const pathLength = size * size * pathLengthMultiplier;	
-
-		let population = [];
-		const fitnessHistory = [];
-
-		function createIndividual() {
-			const moves = ['N', 'E', 'S', 'W'];
-			let chromosome = [];
-			for (let i = 0; i < pathLength; i++) {
-				chromosome.push(moves[Math.floor(Math.random() * 4)]);
-			}
-			return { chromosome: chromosome, fitness: 0 };
-		}
-
-		for (let i = 0; i < populationSize; i++) {
-			population.push(createIndividual());
-		}
-
-		function calculateFitness(individual) {
-			let pos = { ...start };
-			let path = [{...start}];
-			let score = 0;
-			let visited = new Set([`${pos.x},${pos.y}`]);
-
-			for (const move of individual.chromosome) {
-				let nextPos = { ...pos };
-				if (move === 'N') nextPos.y--;
-				else if (move === 'E') nextPos.x++;
-				else if (move === 'S') nextPos.y++;
-				else if (move === 'W') nextPos.x--;
-
-				if (nextPos.x < 0 || nextPos.x >= size || nextPos.y < 0 || nextPos.y >= size || maze[nextPos.y][nextPos.x] === WALL) {
-					score -= 10;
-				} else {
-					pos = nextPos;
-					path.push({...pos});
-					if (!visited.has(`${pos.x},${pos.y}`)) {
-						score += 2;
-						visited.add(`${pos.x},${pos.y}`);
-					} else {
-						score -= 1;
-					}
-				}
-				
-				if (pos.x === end.x && pos.y === end.y) {
-					score += 10000 - path.length * 5;
-					break;
-				}
-			}
-			
-			const distToEnd = Math.abs(pos.x - end.x) + Math.abs(pos.y - end.y);
-			score -= distToEnd * 5;
-			
-			individual.fitness = score;
-			return path;
-		}
-
-		function tournamentSelection(pop, tournamentSizeParam) {
-			const currentTournamentSize = tournamentSizeParam;
-			let best = null;
-			for (let i = 0; i < currentTournamentSize; i++) {
-				const randomIndividual = pop[Math.floor(Math.random() * pop.length)];
-				if (best === null || randomIndividual.fitness > best.fitness) {
-					best = randomIndividual;
-				}
-			}
-			return best;
-		}
-
-		function crossover(parent1, parent2) {
-			const crossoverPoint = Math.floor(Math.random() * parent1.chromosome.length);
-			const child1Chromosome = parent1.chromosome.slice(0, crossoverPoint).concat(parent2.chromosome.slice(crossoverPoint));
-			const child2Chromosome = parent2.chromosome.slice(0, crossoverPoint).concat(parent1.chromosome.slice(crossoverPoint));
-			return [
-				{ chromosome: child1Chromosome, fitness: 0 },
-				{ chromosome: child2Chromosome, fitness: 0 }
-			];
-		}
-
-		function mutate(individual) {
-			const moves = ['N', 'E', 'S', 'W'];
-			for (let i = 0; i < individual.chromosome.length; i++) {
-				if (Math.random() < mutationRate) {
-					individual.chromosome[i] = moves[Math.floor(Math.random() * 4)];
-				}
-			}
-		}
-		
-		let bestIndividualOfAllTime = null;
-
-		for (let gen = 0; gen < numGenerations; gen++) {
-			population.forEach(ind => calculateFitness(ind));
-			population.sort((a, b) => b.fitness - a.fitness);
-			
-			let bestOfGen = population[0];
-			if (bestIndividualOfAllTime === null || bestOfGen.fitness > bestIndividualOfAllTime.fitness) {
-				bestIndividualOfAllTime = JSON.parse(JSON.stringify(bestOfGen));
-			}
-
-			fitnessHistory.push(bestIndividualOfAllTime.fitness);
-
-			let newPopulation = [];
-			
-			const elitismCount = Math.floor(populationSize * elitismRate);
-			for(let i = 0; i < elitismCount; i++) {
-				newPopulation.push(population[i]);
-			}
-
-			while (newPopulation.length < populationSize) {
-				const parent1 = tournamentSelection(population, tournamentSize);
-				const parent2 = tournamentSelection(population, tournamentSize);
-				let [child1, child2] = crossover(parent1, parent2);
-				mutate(child1);
-				mutate(child2);
-				newPopulation.push(child1);
-				if (newPopulation.length < populationSize) {
-					newPopulation.push(child2);
-				}
-			}
-			population = newPopulation;
-			
-			statusMessage.textContent = `Génération ${gen + 1} / ${numGenerations} - Meilleure Fitness: ${Math.round(bestIndividualOfAllTime.fitness)}`;
-
-			if (gen % 5 === 0 || gen === numGenerations - 1) {
-				drawMaze();
-				const bestPath = calculateFitness(bestIndividualOfAllTime);
-				drawPath(bestPath);
-				await new Promise(resolve => setTimeout(resolve, 20));
-			}
-		}
-
-		drawMaze();
-		const finalPath = calculateFitness(bestIndividualOfAllTime);
-		drawPath(finalPath, '#A84C4C');
-		
-		let solutionFound = false;
-		const lastPoint = finalPath[finalPath.length - 1];
-		if (lastPoint.x === end.x && lastPoint.y === end.y) {
-			solutionFound = true;
-		}
-
-		statusMessage.textContent = solutionFound ? `Solution trouvée en ${numGenerations} générations !` : `Optimisation terminée. La meilleure solution trouvée est affichée.`;
-		
-		if (!solutionFound) {
-			statusMessage.textContent += " La solution n'a pas atteint la sortie. Essayez d'augmenter la 'Longueur Max. du Chemin (Multiplicateur)' ou le nombre de 'Générations'.";
-		}
-
-		isSolving = false;
-		solveBtn.disabled = false;
-		generateBtn.disabled = false;
-		solveBtn.textContent = "Résoudre";
-		solveBtn.classList.replace('btn-secondary', 'btn-primary');
-	});
-
-	window.addEventListener('resize', drawMaze);
-	initNewMaze();
-});
-</script>
+			<script src="main.js"></script> 
 </body>
 </html>
