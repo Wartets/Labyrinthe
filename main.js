@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		seedDiv.style.display = isManual ? 'none' : 'block';
 		drawingToolsPanel.style.display = isManual ? 'block' : 'none';
 
-		generateBtn.textContent = isManual ? 'Valider' : 'Générer un Labyrinthe';
+		generateBtn.textContent = isManual ? `Vérifier l'existence d'une solution` : 'Générer un Labyrinthe';
 		
 		updateMazeSizeInfo();
 	});
@@ -446,6 +446,406 @@ document.addEventListener('DOMContentLoaded', () => {
 		return mazeGrid;
 	}
 
+	function generateMazeSidewinder(width, height, opennessPercent, currentMazeSeed) {
+		setSeed(currentMazeSeed);
+		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
+		
+		for (let x = 1; x < width - 1; x++) {
+			mazeGrid[1][x] = PATH;
+		}
+		
+		for (let y = 3; y < height - 1; y += 2) {
+			let runStart = 1;
+			
+			for (let x = 1; x < width - 1; x += 2) {
+				mazeGrid[y][x] = PATH;
+				
+				if (x + 2 < width - 1 && Math.random() > 0.5) {
+					mazeGrid[y][x + 1] = PATH;
+				} else {
+					const opening = runStart + Math.floor(seededRandom() * Math.floor((x - runStart) / 2 + 1)) * 2;
+					mazeGrid[y - 1][opening] = PATH;
+					runStart = x + 2;
+				}
+			}
+		}
+		
+		start = { x: 1, y: 1 };
+		end = { x: width - 2, y: height - 2 };
+		mazeGrid[start.y][start.x] = PATH;
+		mazeGrid[end.y][end.x] = PATH;
+		
+		const opennessThreshold = opennessPercent / 100;
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (mazeGrid[y][x] === WALL) {
+					let pathNeighbors = 0;
+					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
+					
+					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
+						mazeGrid[y][x] = PATH;
+					}
+				}
+			}
+		}
+		return mazeGrid;
+	}
+
+	function generateMazeEller(width, height, opennessPercent, currentMazeSeed) {
+		setSeed(currentMazeSeed);
+		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
+		
+		let sets = {};
+		let setCounter = 0;
+		
+		for (let y = 1; y < height - 1; y += 2) {
+			let rowSets = {};
+			
+			for (let x = 1; x < width - 1; x += 2) {
+				mazeGrid[y][x] = PATH;
+				
+				if (!sets[`${x},${y}`]) {
+					sets[`${x},${y}`] = setCounter++;
+				}
+				rowSets[x] = sets[`${x},${y}`];
+			}
+			
+			if (y < height - 3) {
+				for (let x = 1; x < width - 3; x += 2) {
+					if (seededRandom() > 0.5 && rowSets[x] !== rowSets[x + 2]) {
+						mazeGrid[y][x + 1] = PATH;
+						const oldSet = rowSets[x + 2];
+						for (let key in sets) {
+							if (sets[key] === oldSet) {
+								sets[key] = rowSets[x];
+							}
+						}
+					}
+				}
+				
+				let verticalConnections = {};
+				for (let x = 1; x < width - 1; x += 2) {
+					if (!verticalConnections[rowSets[x]]) {
+						mazeGrid[y + 1][x] = PATH;
+						verticalConnections[rowSets[x]] = true;
+						sets[`${x},${y + 2}`] = rowSets[x];
+					} else if (seededRandom() > 0.5) {
+						mazeGrid[y + 1][x] = PATH;
+						sets[`${x},${y + 2}`] = rowSets[x];
+					}
+				}
+			} else {
+				for (let x = 1; x < width - 3; x += 2) {
+					if (rowSets[x] !== rowSets[x + 2]) {
+						mazeGrid[y][x + 1] = PATH;
+						// Fusionner les ensembles
+						const oldSet = rowSets[x + 2];
+						for (let key in sets) {
+							if (sets[key] === oldSet) {
+								sets[key] = rowSets[x];
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		start = { x: 1, y: 1 };
+		end = { x: width - 2, y: height - 2 };
+		mazeGrid[start.y][start.x] = PATH;
+		mazeGrid[end.y][end.x] = PATH;
+		
+		const opennessThreshold = opennessPercent / 100;
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (mazeGrid[y][x] === WALL) {
+					let pathNeighbors = 0;
+					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
+					
+					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
+						mazeGrid[y][x] = PATH;
+					}
+				}
+			}
+		}
+		return mazeGrid;
+	}
+
+	function generateMazeWilson(width, height, opennessPercent, currentMazeSeed) {
+		setSeed(currentMazeSeed);
+		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
+		
+		let startX = Math.floor(seededRandom() * ((width - 2) / 2)) * 2 + 1;
+		let startY = Math.floor(seededRandom() * ((height - 2) / 2)) * 2 + 1;
+		mazeGrid[startY][startX] = PATH;
+		
+		let visited = new Set();
+		visited.add(`${startX},${startY}`);
+		
+		let unvisited = [];
+		for (let y = 1; y < height - 1; y += 2) {
+			for (let x = 1; x < width - 1; x += 2) {
+				if (!visited.has(`${x},${y}`)) {
+					unvisited.push({x, y});
+				}
+			}
+		}
+		
+		while (unvisited.length > 0) {
+			let index = Math.floor(seededRandom() * unvisited.length);
+			let current = unvisited[index];
+			let path = [current];
+			
+			while (!visited.has(`${current.x},${current.y}`)) {
+				const directions = [[0, -2], [2, 0], [0, 2], [-2, 0]];
+				const dirIndex = Math.floor(seededRandom() * 4);
+				const [dx, dy] = directions[dirIndex];
+				
+				const newX = current.x + dx;
+				const newY = current.y + dy;
+				
+				if (newX > 0 && newX < width - 1 && newY > 0 && newY < height - 1) {
+					current = {x: newX, y: newY};
+					
+					const loopIndex = path.findIndex(cell => cell.x === current.x && cell.y === current.y);
+					if (loopIndex !== -1) {
+						path = path.slice(0, loopIndex + 1);
+					} else {
+						path.push(current);
+					}
+				}
+			}
+			
+			for (let i = 0; i < path.length - 1; i++) {
+				const cell = path[i];
+				const next = path[i + 1];
+				
+				mazeGrid[cell.y][cell.x] = PATH;
+				mazeGrid[(cell.y + next.y) / 2][(cell.x + next.x) / 2] = PATH;
+				
+				visited.add(`${cell.x},${cell.y}`);
+				unvisited = unvisited.filter(c => !(c.x === cell.x && c.y === cell.y));
+			}
+		}
+		
+		start = { x: 1, y: 1 };
+		end = { x: width - 2, y: height - 2 };
+		mazeGrid[start.y][start.x] = PATH;
+		mazeGrid[end.y][end.x] = PATH;
+		
+		const opennessThreshold = opennessPercent / 100;
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (mazeGrid[y][x] === WALL) {
+					let pathNeighbors = 0;
+					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
+					
+					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
+						mazeGrid[y][x] = PATH;
+					}
+				}
+			}
+		}
+		return mazeGrid;
+	}
+	
+	function generateMazeGrowingTree(width, height, opennessPercent, currentMazeSeed) {
+		setSeed(currentMazeSeed);
+		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
+		
+		let cells = [];
+		let startX = Math.floor(seededRandom() * ((width - 2) / 2)) * 2 + 1;
+		let startY = Math.floor(seededRandom() * ((height - 2) / 2)) * 2 + 1;
+		cells.push({x: startX, y: startY});
+		mazeGrid[startY][startX] = PATH;
+		
+		while (cells.length > 0) {
+			let index;
+			if (Math.random() > 0.5) {
+				index = cells.length - 1;
+			} else {
+				index = Math.floor(seededRandom() * cells.length);
+			}
+			
+			let current = cells[index];
+			let neighbors = [];
+			
+			const directions = [[0, -2], [2, 0], [0, 2], [-2, 0]];
+			for (let [dx, dy] of directions) {
+				const newX = current.x + dx;
+				const newY = current.y + dy;
+				
+				if (newX > 0 && newX < width - 1 && newY > 0 && newY < height - 1 && mazeGrid[newY][newX] === WALL) {
+					neighbors.push({x: newX, y: newY, dx, dy});
+				}
+			}
+			
+			if (neighbors.length > 0) {
+				let next = neighbors[Math.floor(seededRandom() * neighbors.length)];
+				mazeGrid[current.y + next.dy/2][current.x + next.dx/2] = PATH;
+				mazeGrid[next.y][next.x] = PATH;
+				cells.push({x: next.x, y: next.y});
+			} else {
+				cells.splice(index, 1);
+			}
+		}
+		
+		start = { x: 1, y: 1 };
+		end = { x: width - 2, y: height - 2 };
+		mazeGrid[start.y][start.x] = PATH;
+		mazeGrid[end.y][end.x] = PATH;
+		
+		const opennessThreshold = opennessPercent / 100;
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (mazeGrid[y][x] === WALL) {
+					let pathNeighbors = 0;
+					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
+					
+					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
+						mazeGrid[y][x] = PATH;
+					}
+				}
+			}
+		}
+		return mazeGrid;
+	}
+	
+	function generateMazeBinaryTree(width, height, opennessPercent, currentMazeSeed) {
+		setSeed(currentMazeSeed);
+		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
+		
+		for (let y = 1; y < height - 1; y += 2) {
+			for (let x = 1; x < width - 1; x += 2) {
+				mazeGrid[y][x] = PATH;
+				
+				let connectNorth = seededRandom() > 0.5;
+				
+				if (connectNorth && y > 1) {
+					mazeGrid[y - 1][x] = PATH;
+				} else if (x > 1) {
+					mazeGrid[y][x - 1] = PATH;
+				}
+			}
+		}
+		
+		start = { x: 1, y: 1 };
+		end = { x: width - 2, y: height - 2 };
+		mazeGrid[start.y][start.x] = PATH;
+		mazeGrid[end.y][end.x] = PATH;
+		
+		const opennessThreshold = opennessPercent / 100;
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (mazeGrid[y][x] === WALL) {
+					let pathNeighbors = 0;
+					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
+					
+					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
+						mazeGrid[y][x] = PATH;
+					}
+				}
+			}
+		}
+		return mazeGrid;
+	}
+	
+	function generateMazeHuntAndKill(width, height, opennessPercent, currentMazeSeed) {
+		setSeed(currentMazeSeed);
+		let mazeGrid = Array(height).fill(null).map(() => Array(width).fill(WALL));
+		
+		let x = Math.floor(seededRandom() * ((width - 2) / 2)) * 2 + 1;
+		let y = Math.floor(seededRandom() * ((height - 2) / 2)) * 2 + 1;
+		mazeGrid[y][x] = PATH;
+		
+		let hunting = false;
+		
+		while (true) {
+			if (!hunting) {
+				let directions = [];
+				
+				if (y > 1 && mazeGrid[y - 2][x] === WALL) directions.push([0, -2]);
+				if (x < width - 2 && mazeGrid[y][x + 2] === WALL) directions.push([2, 0]);
+				if (y < height - 2 && mazeGrid[y + 2][x] === WALL) directions.push([0, 2]);
+				if (x > 1 && mazeGrid[y][x - 2] === WALL) directions.push([-2, 0]);
+				
+				if (directions.length > 0) {
+					const [dx, dy] = directions[Math.floor(seededRandom() * directions.length)];
+					mazeGrid[y + dy/2][x + dx/2] = PATH;
+					x += dx;
+					y += dy;
+					mazeGrid[y][x] = PATH;
+				} else {
+					hunting = true;
+				}
+			} else {
+				let found = false;
+				
+				for (let huntY = 1; huntY < height - 1 && !found; huntY += 2) {
+					for (let huntX = 1; huntX < width - 1 && !found; huntX += 2) {
+						if (mazeGrid[huntY][huntX] === WALL) {
+							let directions = [];
+							if (huntY > 1 && mazeGrid[huntY - 2][huntX] === PATH) directions.push([0, -2]);
+							if (huntX < width - 2 && mazeGrid[huntY][huntX + 2] === PATH) directions.push([2, 0]);
+							if (huntY < height - 2 && mazeGrid[huntY + 2][huntX] === PATH) directions.push([0, 2]);
+							if (huntX > 1 && mazeGrid[huntY][huntX - 2] === PATH) directions.push([-2, 0]);
+							
+							if (directions.length > 0) {
+								const [dx, dy] = directions[Math.floor(seededRandom() * directions.length)];
+								mazeGrid[huntY + dy/2][huntX + dx/2] = PATH;
+								mazeGrid[huntY][huntX] = PATH;
+								x = huntX;
+								y = huntY;
+								found = true;
+								hunting = false;
+							}
+						}
+					}
+				}
+				
+				if (!found) break;
+			}
+		}
+		
+		start = { x: 1, y: 1 };
+		end = { x: width - 2, y: height - 2 };
+		mazeGrid[start.y][start.x] = PATH;
+		mazeGrid[end.y][end.x] = PATH;
+		
+		const opennessThreshold = opennessPercent / 100;
+		for (let y = 1; y < height - 1; y++) {
+			for (let x = 1; x < width - 1; x++) {
+				if (mazeGrid[y][x] === WALL) {
+					let pathNeighbors = 0;
+					if (mazeGrid[y-1] && mazeGrid[y-1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y+1] && mazeGrid[y+1][x] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x-1] === PATH) pathNeighbors++;
+					if (mazeGrid[y][x+1] === PATH) pathNeighbors++;
+					
+					if (pathNeighbors > 0 && seededRandom() < opennessThreshold) {
+						mazeGrid[y][x] = PATH;
+					}
+				}
+			}
+		}
+		return mazeGrid;
+	}
+
 	function drawMaze() {
 		if (!maze) return;
 		canvas.width = canvas.clientWidth;
@@ -554,6 +954,27 @@ document.addEventListener('DOMContentLoaded', () => {
 			case 'recursiveBacktracker':
 				maze = generateMazeRecursiveBacktracker(size, size, openness, currentMazeSeed);
 				break;
+			case 'sidewinder':
+				maze = generateMazeSidewinder(size, size, openness, currentMazeSeed);
+				break;
+			case 'eller':
+				maze = generateMazeEller(size, size, openness, currentMazeSeed);
+				break;
+			case 'aldousBroder':
+				maze = generateMazeAldousBroder(size, size, openness, currentMazeSeed);
+				break;
+			case 'wilson':
+				maze = generateMazeWilson(size, size, openness, currentMazeSeed);
+				break;
+			case 'growingTree':
+				maze = generateMazeGrowingTree(size, size, openness, currentMazeSeed);
+				break;
+			case 'binaryTree':
+				maze = generateMazeBinaryTree(size, size, openness, currentMazeSeed);
+				break;
+			case 'huntAndKill':
+				maze = generateMazeHuntAndKill(size, size, openness, currentMazeSeed);
+				break;
 			default:
 				maze = generateMazeDFS(size, size, openness, currentMazeSeed);
 		}
@@ -622,7 +1043,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			const { x, y } = getCellCoordinates(e);
 			if (x >= 0 && x < size && y >= 0 && y < size) {
 				if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
-					// Empêche de modifier le point de départ ou d'arrivée
 					return;
 				}
 				maze[y][x] = drawingMode === 'wall' ? WALL : PATH;
@@ -847,8 +1267,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		solveBtn.textContent = "Résoudre";
 		solveBtn.classList.replace('btn-secondary', 'btn-primary');
 	});
-	
-	mazeAlgorithmSelect.value = 'dfs';
+
+	const algorithms = ['dfs', 'prim', 'kruskal', 'recursiveBacktracker', 'sidewinder', 'eller', 'wilson', 'growingTree', 'binaryTree', 'huntAndKill'];
+
+	const randomAlgo = algorithms[Math.floor(Math.random() * algorithms.length)];
+	mazeAlgorithmSelect.value = randomAlgo;
 	mazeAlgorithmSelect.dispatchEvent(new Event('change'));
 
 	window.addEventListener('resize', drawMaze);
