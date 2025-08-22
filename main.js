@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const seedDiv = document.getElementById('seedInput').parentElement.parentElement;
 	const drawingToolsPanel = document.getElementById('drawingTools');
 	const drawWallBtn = document.getElementById('drawWallBtn');
+	const drawOneWayBtn = document.getElementById('drawOneWayBtn');
+	const drawLimitedBtn = document.getElementById('drawLimitedBtn');
 	const eraseWallBtn = document.getElementById('eraseWallBtn');
 	const clearMazeBtn = document.getElementById('clearMazeBtn');
 
@@ -59,8 +61,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	const collisionPenaltySlider = document.getElementById('collisionPenalty');
 	const collisionPenaltyValue = document.getElementById('collisionPenaltyValue');
 
-	const WALL = 1;
 	const PATH = 0;
+	const WALL = 1;
+	const ONE_WAY = 2;
+	const LIMITED_PASS = 3;
+
+    const directions = ['north', 'east', 'south', 'west'];
+    const directionArrows = { 'north': '↓', 'east': '←', 'south': '↑', 'west': '→' };
 
 	let maze, start, end, size;
 	let cellSize;
@@ -83,15 +90,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	function hasValidPath(mazeGrid, startPos, endPos) {
 		const rows = mazeGrid.length;
 		const cols = mazeGrid[0].length;
-		const queue = [{ x: startPos.x, y: startPos.y, path: [] }];
-		const visited = new Set();
-		visited.add(`${startPos.x},${startPos.y}`);
+		const queue = [{ x: startPos.x, y: startPos.y, path: [], visited: new Set(), passesRemaining: {} }];
+		queue[0].visited.add(`${startPos.x},${startPos.y}`);
+
+		for (let y = 0; y < rows; y++) {
+			for (let x = 0; x < cols; x++) {
+				if (typeof mazeGrid[y][x] === 'object' && mazeGrid[y][x].type === LIMITED_PASS) {
+					queue[0].passesRemaining[`${x},${y}`] = mazeGrid[y][x].passes;
+				}
+			}
+		}
 
 		const dx = [0, 0, 1, -1];
 		const dy = [1, -1, 0, 0];
 
 		while (queue.length > 0) {
-			const { x, y, path } = queue.shift();
+			const { x, y, path, visited, passesRemaining } = queue.shift();
 
 			if (x === endPos.x && y === endPos.y) {
 				return { pathFound: true, shortestPath: [...path, { x, y }] };
@@ -100,10 +114,45 @@ document.addEventListener('DOMContentLoaded', () => {
 			for (let i = 0; i < 4; i++) {
 				const newX = x + dx[i];
 				const newY = y + dy[i];
+				const newPosKey = `${newX},${newY}`;
 
-				if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && mazeGrid[newY][newX] === PATH && !visited.has(`${newX},${newY}`)) {
-					visited.add(`${newX},${newY}`);
-					queue.push({ x: newX, y: newY, path: [...path, { x, y }] });
+				if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+					const cell = mazeGrid[newY][newX];
+					
+					if (cell === WALL) continue;
+					
+					if (typeof cell === 'object' && cell.type === ONE_WAY) {
+						const direction = cell.direction;
+						const allowed = 
+							(direction === 'north' && i === 2) ||
+							(direction === 'south' && i === 3) ||
+							(direction === 'east' && i === 1) ||
+							(direction === 'west' && i === 0);
+						if (!allowed) continue;
+					}
+					
+					if (typeof cell === 'object' && cell.type === LIMITED_PASS) {
+						const remaining = passesRemaining[newPosKey] || cell.passes;
+						if (remaining <= 0) continue;
+					}
+
+					if (!visited.has(newPosKey)) {
+						const newVisited = new Set(visited);
+						const newPassesRemaining = { ...passesRemaining };
+						
+						if (typeof cell === 'object' && cell.type === LIMITED_PASS) {
+							newPassesRemaining[newPosKey] = (newPassesRemaining[newPosKey] || cell.passes) - 1;
+						}
+						
+						newVisited.add(newPosKey);
+						queue.push({
+							x: newX,
+							y: newY,
+							path: [...path, { x, y }],
+							visited: newVisited,
+							passesRemaining: newPassesRemaining
+						});
+					}
 				}
 			}
 		}
@@ -880,8 +929,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		for (let y = 0; y < size; y++) {
 			for (let x = 0; x < size; x++) {
-				ctx.fillStyle = maze[y][x] === WALL ? '#363573' : '#f3f2ff';
+				if (typeof maze[y][x] === 'object') {
+					if (maze[y][x].type === ONE_WAY) {
+						ctx.fillStyle = '#FFA500';
+					} else if (maze[y][x].type === LIMITED_PASS) {
+						ctx.fillStyle = 'rgba(156, 179, 9, 0.8)';
+					}
+				} else {
+					ctx.fillStyle = maze[y][x] === WALL ? '#363573' : '#f3f2ff';
+				}
 				ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+
+                if (typeof maze[y][x] === 'object') {
+                    if (maze[y][x].type === LIMITED_PASS) {
+                        ctx.fillStyle = 'white';
+                        ctx.font = `${cellSize * 0.5}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(maze[y][x].passes, (x + 0.5) * cellSize, (y + 0.5) * cellSize);
+                    } else if (maze[y][x].type === ONE_WAY) {
+                        const arrow = directionArrows[maze[y][x].direction];
+                        ctx.fillStyle = 'white';
+                        ctx.font = `${cellSize * 0.6}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(arrow, (x + 0.5) * cellSize, (y + 0.5) * cellSize);
+                    }
+                }
 			}
 		}
 
@@ -947,15 +1021,17 @@ document.addEventListener('DOMContentLoaded', () => {
 				const oldX = Math.floor(x / scaleX);
 				const oldY = Math.floor(y / scaleY);
 				
-				if (oldX < oldSize && oldY < oldSize && oldMaze[oldY][oldX] === PATH) {
-					newMaze[y][x] = PATH;
+				if (oldX < oldSize && oldY < oldSize) {
+					if (typeof oldMaze[oldY][oldX] === 'object') {
+						newMaze[y][x] = { ...oldMaze[oldY][oldX] };
+					} else {
+						newMaze[y][x] = oldMaze[oldY][oldX];
+					}
 				}
 			}
 		}
-		
 
 		start = { x: 1, y: 1 };
-		
 		end = { x: newSize - 2, y: newSize - 2 };
 		
 		newMaze[start.y][start.x] = PATH;
@@ -1061,13 +1137,35 @@ document.addEventListener('DOMContentLoaded', () => {
 		drawingMode = 'wall';
 		drawWallBtn.classList.replace('btn-secondary', 'btn-primary');
 		eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
 		statusMessage.textContent = "Mode : Dessiner un mur";
+	});
+
+	drawOneWayBtn.addEventListener('click', () => {
+		drawingMode = 'one_way';
+		drawOneWayBtn.classList.replace('btn-secondary', 'btn-primary');
+		eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
+		statusMessage.textContent = "Mode : Dessiner un passage à sens unique";
+	});
+
+	drawLimitedBtn.addEventListener('click', () => {
+		drawingMode = 'limited';
+		drawLimitedBtn.classList.replace('btn-secondary', 'btn-primary');
+		eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
+		statusMessage.textContent = "Mode : Dessiner un passage limité";
 	});
 
 	eraseWallBtn.addEventListener('click', () => {
 		drawingMode = 'path';
 		drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
 		eraseWallBtn.classList.replace('btn-secondary', 'btn-primary');
+		drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
+		drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
 		statusMessage.textContent = "Mode : Effacer un mur";
 	});
 
@@ -1095,27 +1193,47 @@ document.addEventListener('DOMContentLoaded', () => {
 			isDrawing = true;
 			const { x, y } = getCellCoordinates(e);
 			if (x >= 0 && x < size && y >= 0 && y < size) {
-				if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
-					return;
+				if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) return;
+				
+				if (drawingMode === 'wall') {
+					maze[y][x] = WALL;
+				} else if (drawingMode === 'path') {
+					maze[y][x] = PATH;
+				} else if (drawingMode === 'one_way') {
+					maze[y][x] = { type: ONE_WAY, direction: 'north' };
+				} else if (drawingMode === 'limited') {
+					maze[y][x] = { type: LIMITED_PASS, passes: 1 };
 				}
-				maze[y][x] = drawingMode === 'wall' ? WALL : PATH;
 				drawMaze();
 			}
 		}
 	});
 
-	canvas.addEventListener('mousemove', (e) => {
-		if (isDrawing && mazeAlgorithmSelect.value === 'manual' && drawingMode) {
-			const { x, y } = getCellCoordinates(e);
-			if (x >= 0 && x < size && y >= 0 && y < size) {
-				if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
-					return;
-				}
-				maze[y][x] = drawingMode === 'wall' ? WALL : PATH;
-				drawMaze();
-			}
-		}
-	});
+	canvas.addEventListener('wheel', (e) => {
+        if (mazeAlgorithmSelect.value === 'manual') {
+            const { x, y } = getCellCoordinates(e);
+
+            if (x < 0 || x >= size || y < 0 || y >= size || typeof maze[y][x] !== 'object') {
+                return;
+            }
+
+            e.preventDefault();
+
+            const cell = maze[y][x];
+
+            if (cell.type === LIMITED_PASS) {
+                const delta = e.deltaY > 0 ? -1 : 1;
+                cell.passes = Math.max(1, cell.passes + delta);
+            } else if (cell.type === ONE_WAY) {
+                const currentIndex = directions.indexOf(cell.direction);
+                const delta = e.deltaY > 0 ? 1 : -1;
+                const nextIndex = (currentIndex + delta + directions.length) % directions.length;
+                cell.direction = directions[nextIndex];
+            }
+            
+            drawMaze();
+        }
+    });
 
 	canvas.addEventListener('mouseup', () => {
 		isDrawing = false;
@@ -1204,6 +1322,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			let turnCount = 0;
 			let progressMade = 0;
 			let maxDistance = Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
+			
+			const passesRemaining = {};
+			for (let y = 0; y < size; y++) {
+				for (let x = 0; x < size; x++) {
+					if (typeof maze[y][x] === 'object' && maze[y][x].type === LIMITED_PASS) {
+						passesRemaining[`${x},${y}`] = maze[y][x].passes;
+					}
+				}
+			}
 
 			for (const move of individual.chromosome) {
 				let nextPos = { ...pos };
@@ -1212,29 +1339,62 @@ document.addEventListener('DOMContentLoaded', () => {
 				else if (move === 'S') nextPos.y++;
 				else if (move === 'W') nextPos.x--;
 
-				if (nextPos.x < 0 || nextPos.x >= size || nextPos.y < 0 || nextPos.y >= size || maze[nextPos.y][nextPos.x] === WALL) {
+				if (nextPos.x < 0 || nextPos.x >= size || nextPos.y < 0 || nextPos.y >= size) {
 					score += collisionPenalty;
-				} else {
-					pos = nextPos;
-					path.push({...pos});
-					
-					if (!visited.has(`${pos.x},${pos.y}`)) {
-						score += progressWeight;
-						visited.add(`${pos.x},${pos.y}`);
-					} else {
-						score += pathLengthWeight;
-					}
-					
-					if (lastDirection && lastDirection !== move) {
-						score += turnsWeight;
-						turnCount++;
-					}
-					lastDirection = move;
-					
-					const currentDistance = Math.abs(pos.x - end.x) + Math.abs(pos.y - end.y);
-					const progress = (maxDistance - currentDistance) / maxDistance;
-					progressMade += progress;
+					continue;
 				}
+
+				const cell = maze[nextPos.y][nextPos.x];
+				let canMove = true;
+
+				if (cell === WALL) {
+					score += collisionPenalty;
+					continue;
+				}
+
+				if (typeof cell === 'object' && cell.type === ONE_WAY) {
+					const direction = cell.direction;
+					const moveDirection = 
+						move === 'S' ? 'north' :
+						move === 'N' ? 'south' :
+						move === 'W' ? 'east' :
+						'west';
+						
+					if (moveDirection !== direction) {
+						score += collisionPenalty;
+						continue;
+					}
+				}
+
+				if (typeof cell === 'object' && cell.type === LIMITED_PASS) {
+					const key = `${nextPos.x},${nextPos.y}`;
+					if (passesRemaining[key] <= 0) {
+						score += collisionPenalty;
+						continue;
+					} else {
+						passesRemaining[key]--;
+					}
+				}
+
+				pos = nextPos;
+				path.push({...pos});
+				
+				if (!visited.has(`${pos.x},${pos.y}`)) {
+					score += progressWeight;
+					visited.add(`${pos.x},${pos.y}`);
+				} else {
+					score += pathLengthWeight;
+				}
+				
+				if (lastDirection && lastDirection !== move) {
+					score += turnsWeight;
+					turnCount++;
+				}
+				lastDirection = move;
+				
+				const currentDistance = Math.abs(pos.x - end.x) + Math.abs(pos.y - end.y);
+				const progress = (maxDistance - currentDistance) / maxDistance;
+				progressMade += progress;
 				
 				if (pos.x === end.x && pos.y === end.y) {
 					score += 10000 + pathLengthWeight * path.length;
