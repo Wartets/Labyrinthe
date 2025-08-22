@@ -30,6 +30,7 @@
 									<option value="prim">Prim's Algorithm</option>
 									<option value="kruskal">Kruskal's Algorithm</option>
 									<option value="recursiveBacktracker">Recursive Backtracker</option>
+									<option value="manual">Dessin manuel</option>
 								</select>
 								<p class="text-xs text-gray-500 mt-1">Choisissez l'algorithme pour générer le labyrinthe.</p>
 							</div>
@@ -43,7 +44,7 @@
 							<div class="border-t border-color pt-4 mt-4">
 								<label for="mazeSize" class="block text-sm font-medium text-gray-700">Taille du Labyrinthe: <span id="mazeSizeValue" class="font-bold accent-color">21x21</span></label>
 								<input id="mazeSize" type="range" min="5" max="101" step="2" value="21" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-								<p class="text-xs text-gray-500 mt-1">Définit la largeur et la hauteur de la grille du labyrinthe.</p>
+								<p id="mazeSizeInfo" class="text-xs text-gray-500 mt-1">Définit la largeur et la hauteur de la grille du labyrinthe.</p>
 							</div>
 
 							<div class="border-t border-color pt-4 mt-4">
@@ -53,6 +54,22 @@
 									<button id="randomSeedBtn" class="btn-secondary px-3 py-2 text-sm rounded-lg transition-colors duration-200">Graine Aléatoire</button>
 								</div>
 								<p class="text-xs text-gray-500 mt-1">Utilisez une graine spécifique pour générer le même labyrinthe de manière reproductible.</p>
+							</div>
+							
+							<div id="drawingTools" class="hidden border-t border-color pt-4 mt-4">
+								<label class="block text-sm font-medium text-gray-700">Outils de Dessin:</label>
+								<div class="flex space-x-2 mt-2">
+									<button id="drawWallBtn" class="btn-primary w-full py-2 px-4 rounded-lg transition-colors duration-200" data-mode="wall">
+										Dessiner un mur
+									</button>
+									<button id="eraseWallBtn" class="btn-secondary w-full py-2 px-4 rounded-lg transition-colors duration-200" data-mode="path">
+										Effacer un mur
+									</button>
+								</div>
+								<button id="clearMazeBtn" class="btn-secondary w-full py-2 px-4 rounded-lg transition-colors duration-200 mt-2">
+									Tout effacer
+								</button>
+								<p class="text-xs text-gray-500 mt-1">Cliquez sur le canevas pour dessiner ou effacer des murs.</p>
 							</div>
 
 							<button id="generateBtn" class="w-full btn-secondary font-bold py-2 px-4 rounded-lg transition-colors duration-200">Générer un Labyrinthe</button>
@@ -101,10 +118,16 @@
 								<p class="text-xs text-gray-500 mt-1">Pourcentage des meilleurs individus conservés directement.</p>
 							</div>
 
-							<div class="border-t border-color pt-4 mt-4">
+							<div>
 								<label for="pathLengthMultiplier" class="block text-sm font-medium text-gray-700">Longueur Max. du Chemin (Multiplicateur): <span id="pathLengthMultiplierValue" class="font-bold accent-color">4x</span></label>
 								<input id="pathLengthMultiplier" type="range" min="1" max="10" step="1" value="4" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
 								<p class="text-xs text-gray-500 mt-1">Multiplie la taille du labyrinthe pour définir la longueur maximale du chemin.</p>
+							</div>
+
+							<div class="border-t border-color pt-4 mt-4">
+								<label for="animSpeed" class="block text-sm font-medium text-gray-700">Vitesse d'animation: <span id="animSpeedValue" class="font-bold accent-color">10%</span></label>
+								<input id="animSpeed" type="range" min="0" max="2000" step="10" value="20" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<p class="text-xs text-gray-500 mt-1">Modifie la vitesse à laquelle est fait le rendu (ne permet pas d'accélerer les calculs).</p>
 							</div>
 
 							<button id="solveBtn" class="w-full btn-primary font-bold py-3 px-4 rounded-lg transition-colors duration-200 text-lg">Résoudre</button>

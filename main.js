@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const mazeSizeSlider = document.getElementById('mazeSize');
 	const mazeSizeValue = document.getElementById('mazeSizeValue');
+	const mazeSizeInfo = document.getElementById('mazeSizeInfo');
 	const opennessRateSlider = document.getElementById('opennessRate');	
 	const opennessRateValue = document.getElementById('opennessRateValue');
 	const mazeAlgorithmSelect = document.getElementById('mazeAlgorithm');
@@ -21,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const tournamentSizeValue = document.getElementById('tournamentSizeValue');
 	const elitismRateSlider = document.getElementById('elitismRate');
 	const elitismRateValue = document.getElementById('elitismRateValue');
+	
+	const animSpeedSlider = document.getElementById('animSpeed');
+	const animSpeedValue = document.getElementById('animSpeedValue');
 
 	const pathLengthMultiplierSlider = document.getElementById('pathLengthMultiplier');
 	const pathLengthMultiplierValue = document.getElementById('pathLengthMultiplierValue');
@@ -29,12 +33,22 @@ document.addEventListener('DOMContentLoaded', () => {
 	const solveBtn = document.getElementById('solveBtn');
 	const statusMessage = document.getElementById('status-message');
 
+	const opennessRateDiv = document.getElementById('opennessRate').parentElement;
+	const seedDiv = document.getElementById('seedInput').parentElement.parentElement;
+	const drawingToolsPanel = document.getElementById('drawingTools');
+	const drawWallBtn = document.getElementById('drawWallBtn');
+	const eraseWallBtn = document.getElementById('eraseWallBtn');
+	const clearMazeBtn = document.getElementById('clearMazeBtn');
+
 	const WALL = 1;
 	const PATH = 0;
 
 	let maze, start, end, size;
 	let cellSize;
 	let isSolving = false;
+
+	let drawingMode = null;
+	let isDrawing = false;
 
 	let currentSeed = Date.now();
 
@@ -45,6 +59,37 @@ document.addEventListener('DOMContentLoaded', () => {
 	function seededRandom() {
 		currentSeed = (currentSeed * 9301 + 49297) % 233280;
 		return currentSeed / 233280;
+	}
+
+	function hasValidPath(mazeGrid, startPos, endPos) {
+		const rows = mazeGrid.length;
+		const cols = mazeGrid[0].length;
+		const queue = [{ x: startPos.x, y: startPos.y, path: [] }];
+		const visited = new Set();
+		visited.add(`${startPos.x},${startPos.y}`);
+
+		const dx = [0, 0, 1, -1];
+		const dy = [1, -1, 0, 0];
+
+		while (queue.length > 0) {
+			const { x, y, path } = queue.shift();
+
+			if (x === endPos.x && y === endPos.y) {
+				return { pathFound: true, shortestPath: [...path, { x, y }] };
+			}
+
+			for (let i = 0; i < 4; i++) {
+				const newX = x + dx[i];
+				const newY = y + dy[i];
+
+				if (newX >= 0 && newX < cols && newY >= 0 && newY < rows && mazeGrid[newY][newX] === PATH && !visited.has(`${newX},${newY}`)) {
+					visited.add(`${newX},${newY}`);
+					queue.push({ x: newX, y: newY, path: [...path, { x, y }] });
+				}
+			}
+		}
+
+		return { pathFound: false, shortestPath: null };
 	}
 
 	const updateSliderValue = (slider, display, formatter) => {
@@ -62,6 +107,32 @@ document.addEventListener('DOMContentLoaded', () => {
 	updateSliderValue(tournamentSizeSlider, tournamentSizeValue, v => v);
 	updateSliderValue(elitismRateSlider, elitismRateValue, v => `${v}%`);
 	updateSliderValue(pathLengthMultiplierSlider, pathLengthMultiplierValue, v => `${v}x`);
+	updateSliderValue(animSpeedSlider, animSpeedValue, v => `${v}ms`);
+
+	mazeSizeSlider.addEventListener('input', () => {
+		if (mazeAlgorithmSelect.value === 'manual' && maze) {
+			const newSize = parseInt(mazeSizeSlider.value);
+			
+			if (newSize !== size) {
+				resizeMaze(newSize);
+				drawMaze();
+				statusMessage.textContent = `Labyrinthe redimensionné à ${newSize}x${newSize}. Vous pouvez continuer à dessiner.`;
+			}
+		}
+	});
+
+	mazeAlgorithmSelect.addEventListener('change', (e) => {
+		const selectedMode = e.target.value;
+		const isManual = selectedMode === 'manual';
+
+		opennessRateDiv.style.display = isManual ? 'none' : 'block';
+		seedDiv.style.display = isManual ? 'none' : 'block';
+		drawingToolsPanel.style.display = isManual ? 'block' : 'none';
+
+		generateBtn.textContent = isManual ? 'Valider' : 'Générer un Labyrinthe';
+		
+		updateMazeSizeInfo();
+	});
 	
 	randomSeedBtn.addEventListener('click', () => {
 		const newSeed = Math.floor(Math.random() * 1000000000);
@@ -77,6 +148,14 @@ document.addEventListener('DOMContentLoaded', () => {
 			setSeed(Date.now());	
 		}
 	});
+
+	function updateMazeSizeInfo() {
+		if (mazeAlgorithmSelect.value === 'manual') {
+			mazeSizeInfo.textContent = "Redimensionne le labyrinthe actuel en adaptant le dessin à la nouvelle taille.";
+		} else {
+			mazeSizeInfo.textContent = "Définit la largeur et la hauteur de la grille du labyrinthe.";
+		}
+	}
 
 	function generateMazeDFS(width, height, opennessPercent, currentMazeSeed) {
 		setSeed(currentMazeSeed);
@@ -402,7 +481,58 @@ document.addEventListener('DOMContentLoaded', () => {
 		ctx.stroke();
 	}
 
+	function resizeMaze(newSize) {
+		const oldSize = size;
+		const oldMaze = maze;
+		const newMaze = Array(newSize).fill(null).map(() => Array(newSize).fill(WALL));
+		
+		const scaleX = (newSize - 1) / (oldSize - 1);
+		const scaleY = (newSize - 1) / (oldSize - 1);
+		
+		for (let y = 0; y < newSize; y++) {
+			for (let x = 0; x < newSize; x++) {
+				const oldX = Math.floor(x / scaleX);
+				const oldY = Math.floor(y / scaleY);
+				
+				if (oldX < oldSize && oldY < oldSize && oldMaze[oldY][oldX] === PATH) {
+					newMaze[y][x] = PATH;
+				}
+			}
+		}
+		
+
+		start = { x: 1, y: 1 };
+		
+		end = { x: newSize - 2, y: newSize - 2 };
+		
+		newMaze[start.y][start.x] = PATH;
+		newMaze[end.y][end.x] = PATH;
+		
+		maze = newMaze;
+		size = newSize;
+	}
+
 	function initNewMaze() {
+		const selectedAlgorithm = mazeAlgorithmSelect.value;
+		if (selectedAlgorithm === 'manual') {
+			const newSize = parseInt(mazeSizeSlider.value);
+			
+			if (maze && size !== newSize) {
+				resizeMaze(newSize);
+			} else {
+				size = newSize;
+				maze = Array(size).fill(null).map(() => Array(size).fill(WALL));
+				start = { x: 1, y: 1 };
+				end = { x: size - 2, y: size - 2 };
+				maze[start.y][start.x] = PATH;
+				maze[end.y][end.x] = PATH;
+			}
+			
+			drawMaze();
+			statusMessage.textContent = "Mode 'Dessin manuel' activé. Créez votre labyrinthe !";
+			return;
+		}
+
 		size = parseInt(mazeSizeSlider.value);
 		const openness = parseInt(opennessRateSlider.value);
 		let currentMazeSeed = parseInt(seedInput.value);
@@ -411,8 +541,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			seedInput.value = currentMazeSeed;
 		}
 		setSeed(currentMazeSeed);
-
-		const selectedAlgorithm = mazeAlgorithmSelect.value;
 		switch (selectedAlgorithm) {
 			case 'dfs':
 				maze = generateMazeDFS(size, size, openness, currentMazeSeed);
@@ -434,7 +562,95 @@ document.addEventListener('DOMContentLoaded', () => {
 		statusMessage.textContent = ""; 
 	}
 
-	generateBtn.addEventListener('click', initNewMaze);
+	generateBtn.addEventListener('click', () => {
+		const selectedAlgorithm = mazeAlgorithmSelect.value;
+		if (selectedAlgorithm === 'manual') {
+			const { pathFound, shortestPath } = hasValidPath(maze, start, end);
+			if (pathFound) {
+				drawMaze();
+				drawPath(shortestPath, 'rgba(76, 175, 80, 0.7)');
+				statusMessage.textContent = "Labyrinthe valide ! Un chemin existe.";
+				solveBtn.disabled = false;
+				solveBtn.textContent = "Résoudre";
+			} else {
+				statusMessage.textContent = "Attention : Aucun chemin n'existe entre le début et la fin.";
+				solveBtn.disabled = true;
+				solveBtn.textContent = "Résoudre";
+			}
+		} else {
+			initNewMaze();
+			solveBtn.disabled = false;
+		}
+	});
+
+	drawWallBtn.addEventListener('click', () => {
+		drawingMode = 'wall';
+		drawWallBtn.classList.replace('btn-secondary', 'btn-primary');
+		eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		statusMessage.textContent = "Mode : Dessiner un mur";
+	});
+
+	eraseWallBtn.addEventListener('click', () => {
+		drawingMode = 'path';
+		drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
+		eraseWallBtn.classList.replace('btn-secondary', 'btn-primary');
+		statusMessage.textContent = "Mode : Effacer un mur";
+	});
+
+	clearMazeBtn.addEventListener('click', () => {
+		if (mazeAlgorithmSelect.value === 'manual') {
+			maze = Array(size).fill(null).map(() => Array(size).fill(PATH));
+			maze[start.y][start.x] = PATH;
+			maze[end.y][end.x] = PATH;
+			drawMaze();
+			statusMessage.textContent = "Canevas effacé.";
+		}
+	});
+
+	function getCellCoordinates(event) {
+		const rect = canvas.getBoundingClientRect();
+		const scaleX = canvas.width / rect.width;
+		const scaleY = canvas.height / rect.height;
+		const x = Math.floor(((event.clientX - rect.left) * scaleX) / cellSize);
+		const y = Math.floor(((event.clientY - rect.top) * scaleY) / cellSize);
+		return { x, y };
+	}
+
+	canvas.addEventListener('mousedown', (e) => {
+		if (mazeAlgorithmSelect.value === 'manual' && drawingMode) {
+			isDrawing = true;
+			const { x, y } = getCellCoordinates(e);
+			if (x >= 0 && x < size && y >= 0 && y < size) {
+				if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
+					// Empêche de modifier le point de départ ou d'arrivée
+					return;
+				}
+				maze[y][x] = drawingMode === 'wall' ? WALL : PATH;
+				drawMaze();
+			}
+		}
+	});
+
+	canvas.addEventListener('mousemove', (e) => {
+		if (isDrawing && mazeAlgorithmSelect.value === 'manual' && drawingMode) {
+			const { x, y } = getCellCoordinates(e);
+			if (x >= 0 && x < size && y >= 0 && y < size) {
+				if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
+					return;
+				}
+				maze[y][x] = drawingMode === 'wall' ? WALL : PATH;
+				drawMaze();
+			}
+		}
+	});
+
+	canvas.addEventListener('mouseup', () => {
+		isDrawing = false;
+	});
+
+	canvas.addEventListener('mouseleave', () => {
+		isDrawing = false;
+	});
 
 	solveBtn.addEventListener('click', async () => {
 		if (!maze) {
@@ -468,7 +684,9 @@ document.addEventListener('DOMContentLoaded', () => {
 		solveBtn.classList.replace('btn-primary', 'btn-secondary');
 		statusMessage.textContent = "Initialisation de l'algorithme...";
 		
-		await new Promise(resolve => setTimeout(resolve, 100));
+		const animSpeedConst = parseInt(animSpeedSlider.value);
+		
+		await new Promise(resolve => setTimeout(resolve, animSpeedConst));
 
 		const populationSize = parseInt(populationSizeSlider.value);
 		const numGenerations = parseInt(generationsSlider.value);
@@ -476,7 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		const tournamentSize = parseInt(tournamentSizeSlider.value);
 		const elitismRate = parseInt(elitismRateSlider.value) / 100;
 		const pathLengthMultiplier = parseInt(pathLengthMultiplierSlider.value);
-		const pathLength = size * size * pathLengthMultiplier;	
+		const pathLength = size * size * pathLengthMultiplier;
 
 		let population = [];
 		const fitnessHistory = [];
@@ -603,7 +821,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				drawMaze();
 				const bestPath = calculateFitness(bestIndividualOfAllTime);
 				drawPath(bestPath);
-				await new Promise(resolve => setTimeout(resolve, 20));
+			await new Promise(resolve => setTimeout(resolve, parseInt(animSpeedSlider.value)));
 			}
 		}
 
@@ -617,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			solutionFound = true;
 		}
 
-		statusMessage.textContent = solutionFound ? `Solution trouvée en ${numGenerations} générations !` : `Optimisation terminée. La meilleure solution trouvée est affichée.`;
+		statusMessage.textContent = solutionFound ? `Une solution a été trouvée en ${numGenerations} générations` : `Optimisation terminée. La meilleure solution trouvée est affichée.`;
 		
 		if (!solutionFound) {
 			statusMessage.textContent += " La solution n'a pas atteint la sortie. Essayez d'augmenter la 'Longueur Max. du Chemin (Multiplicateur)' ou le nombre de 'Générations'.";
@@ -629,7 +847,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		solveBtn.textContent = "Résoudre";
 		solveBtn.classList.replace('btn-secondary', 'btn-primary');
 	});
+	
+	mazeAlgorithmSelect.value = 'dfs';
+	mazeAlgorithmSelect.dispatchEvent(new Event('change'));
 
 	window.addEventListener('resize', drawMaze);
 	initNewMaze();
+	solveBtn.disabled = false;
+	updateMazeSizeInfo();
 });
