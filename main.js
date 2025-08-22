@@ -40,6 +40,25 @@ document.addEventListener('DOMContentLoaded', () => {
 	const eraseWallBtn = document.getElementById('eraseWallBtn');
 	const clearMazeBtn = document.getElementById('clearMazeBtn');
 
+	const crossoverRateSlider = document.getElementById('crossoverRate');
+	const crossoverRateValue = document.getElementById('crossoverRateValue');
+	const crossoverTypeSelect = document.getElementById('crossoverType');
+	const mutationTypeSelect = document.getElementById('mutationType');
+	const diversityPressureSlider = document.getElementById('diversityPressure');
+	const diversityPressureValue = document.getElementById('diversityPressureValue');
+	const selectionPressureSlider = document.getElementById('selectionPressure');
+	const selectionPressureValue = document.getElementById('selectionPressureValue');
+	const distanceWeightSlider = document.getElementById('distanceWeight');
+	const distanceWeightValue = document.getElementById('distanceWeightValue');
+	const pathLengthWeightSlider = document.getElementById('pathLengthWeight');
+	const pathLengthWeightValue = document.getElementById('pathLengthWeightValue');
+	const turnsWeightSlider = document.getElementById('turnsWeight');
+	const turnsWeightValue = document.getElementById('turnsWeightValue');
+	const progressWeightSlider = document.getElementById('progressWeight');
+	const progressWeightValue = document.getElementById('progressWeightValue');
+	const collisionPenaltySlider = document.getElementById('collisionPenalty');
+	const collisionPenaltyValue = document.getElementById('collisionPenaltyValue');
+
 	const WALL = 1;
 	const PATH = 0;
 
@@ -108,6 +127,14 @@ document.addEventListener('DOMContentLoaded', () => {
 	updateSliderValue(elitismRateSlider, elitismRateValue, v => `${v}%`);
 	updateSliderValue(pathLengthMultiplierSlider, pathLengthMultiplierValue, v => `${v}x`);
 	updateSliderValue(animSpeedSlider, animSpeedValue, v => `${v}ms`);
+	updateSliderValue(crossoverRateSlider, crossoverRateValue, v => `${v}%`);
+	updateSliderValue(diversityPressureSlider, diversityPressureValue, v => `${v}%`);
+	updateSliderValue(selectionPressureSlider, selectionPressureValue, v => v);
+	updateSliderValue(distanceWeightSlider, distanceWeightValue, v => v);
+	updateSliderValue(pathLengthWeightSlider, pathLengthWeightValue, v => v);
+	updateSliderValue(turnsWeightSlider, turnsWeightValue, v => v);
+	updateSliderValue(progressWeightSlider, progressWeightValue, v => v);
+	updateSliderValue(collisionPenaltySlider, collisionPenaltyValue, v => v);
 
 	mazeSizeSlider.addEventListener('input', () => {
 		if (mazeAlgorithmSelect.value === 'manual' && maze) {
@@ -541,7 +568,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				for (let x = 1; x < width - 3; x += 2) {
 					if (rowSets[x] !== rowSets[x + 2]) {
 						mazeGrid[y][x + 1] = PATH;
-						// Fusionner les ensembles
 						const oldSet = rowSets[x + 2];
 						for (let key in sets) {
 							if (sets[key] === oldSet) {
@@ -854,7 +880,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		for (let y = 0; y < size; y++) {
 			for (let x = 0; x < size; x++) {
-				ctx.fillStyle = maze[y][x] === WALL ? '#4A4A4A' : '#FFFFFF';
+				ctx.fillStyle = maze[y][x] === WALL ? '#363573' : '#f3f2ff';
 				ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
 			}
 		}
@@ -865,20 +891,47 @@ document.addEventListener('DOMContentLoaded', () => {
 		ctx.fillStyle = '#F44336';
 		ctx.fillRect(end.x * cellSize, end.y * cellSize, cellSize, cellSize);
 	}
-
+	
 	function drawPath(path, color = 'rgba(168, 139, 121, 0.7)') {
 		if (!path || path.length === 0) return;
-		ctx.lineWidth = cellSize * 0.4;
+		
+		const cellCounts = {};
+		for (const point of path) {
+			const key = `${point.x},${point.y}`;
+			cellCounts[key] = (cellCounts[key] || 0) + 1;
+		}
+
+		ctx.lineWidth = cellSize * 0.3;
 		ctx.strokeStyle = color;
 		ctx.lineCap = 'round';
 		ctx.lineJoin = 'round';
-
+		
 		ctx.beginPath();
 		ctx.moveTo((path[0].x + 0.5) * cellSize, (path[0].y + 0.5) * cellSize);
 		for (let i = 1; i < path.length; i++) {
 			ctx.lineTo((path[i].x + 0.5) * cellSize, (path[i].y + 0.5) * cellSize);
 		}
 		ctx.stroke();
+
+		for (let i = 1; i < path.length; i++) {
+			const current = path[i];
+			const prev = path[i-1];
+			
+			const count = Math.max(
+				cellCounts[`${current.x},${current.y}`] || 0,
+				cellCounts[`${prev.x},${prev.y}`] || 0
+			);
+			
+			if (count > 1) {
+				ctx.lineWidth = Math.min(cellSize * (1 - 1 / size), cellSize * (0.3 + count * 0.03));
+				
+				ctx.beginPath();
+				ctx.strokeStyle = color;
+				ctx.moveTo((prev.x + 0.5) * cellSize, (prev.y + 0.5) * cellSize);
+				ctx.lineTo((current.x + 0.5) * cellSize, (current.y + 0.5) * cellSize);
+				ctx.stroke();
+			}
+		}
 	}
 
 	function resizeMaze(newSize) {
@@ -1115,6 +1168,16 @@ document.addEventListener('DOMContentLoaded', () => {
 		const elitismRate = parseInt(elitismRateSlider.value) / 100;
 		const pathLengthMultiplier = parseInt(pathLengthMultiplierSlider.value);
 		const pathLength = size * size * pathLengthMultiplier;
+		const crossoverRate = parseInt(crossoverRateSlider.value) / 100;
+		const crossoverType = crossoverTypeSelect.value;
+		const mutationType = mutationTypeSelect.value;
+		const diversityPressure = parseInt(diversityPressureSlider.value) / 100;
+		const selectionPressure = parseFloat(selectionPressureSlider.value);
+		const distanceWeight = parseFloat(distanceWeightSlider.value);
+		const pathLengthWeight = parseFloat(pathLengthWeightSlider.value);
+		const turnsWeight = parseFloat(turnsWeightSlider.value);
+		const progressWeight = parseFloat(progressWeightSlider.value);
+		const collisionPenalty = parseFloat(collisionPenaltySlider.value);
 
 		let population = [];
 		const fitnessHistory = [];
@@ -1137,6 +1200,10 @@ document.addEventListener('DOMContentLoaded', () => {
 			let path = [{...start}];
 			let score = 0;
 			let visited = new Set([`${pos.x},${pos.y}`]);
+			let lastDirection = null;
+			let turnCount = 0;
+			let progressMade = 0;
+			let maxDistance = Math.abs(start.x - end.x) + Math.abs(start.y - end.y);
 
 			for (const move of individual.chromosome) {
 				let nextPos = { ...pos };
@@ -1146,41 +1213,163 @@ document.addEventListener('DOMContentLoaded', () => {
 				else if (move === 'W') nextPos.x--;
 
 				if (nextPos.x < 0 || nextPos.x >= size || nextPos.y < 0 || nextPos.y >= size || maze[nextPos.y][nextPos.x] === WALL) {
-					score -= 10;
+					score += collisionPenalty;
 				} else {
 					pos = nextPos;
 					path.push({...pos});
+					
 					if (!visited.has(`${pos.x},${pos.y}`)) {
-						score += 2;
+						score += progressWeight;
 						visited.add(`${pos.x},${pos.y}`);
 					} else {
-						score -= 1;
+						score += pathLengthWeight;
 					}
+					
+					if (lastDirection && lastDirection !== move) {
+						score += turnsWeight;
+						turnCount++;
+					}
+					lastDirection = move;
+					
+					const currentDistance = Math.abs(pos.x - end.x) + Math.abs(pos.y - end.y);
+					const progress = (maxDistance - currentDistance) / maxDistance;
+					progressMade += progress;
 				}
 				
 				if (pos.x === end.x && pos.y === end.y) {
-					score += 10000 - path.length * 5;
+					score += 10000 + pathLengthWeight * path.length;
 					break;
 				}
 			}
 			
 			const distToEnd = Math.abs(pos.x - end.x) + Math.abs(pos.y - end.y);
-			score -= distToEnd * 5;
+			score += distanceWeight * (maxDistance - distToEnd);
+			score += progressMade * progressWeight;
 			
 			individual.fitness = score;
 			return path;
 		}
 
-		function tournamentSelection(pop, tournamentSizeParam) {
+		function tournamentSelection(pop, tournamentSizeParam, pressure) {
 			const currentTournamentSize = tournamentSizeParam;
-			let best = null;
+			let competitors = [];
+			
 			for (let i = 0; i < currentTournamentSize; i++) {
-				const randomIndividual = pop[Math.floor(Math.random() * pop.length)];
-				if (best === null || randomIndividual.fitness > best.fitness) {
-					best = randomIndividual;
+				competitors.push(pop[Math.floor(Math.random() * pop.length)]);
+			}
+			
+			competitors.sort((a, b) => b.fitness - a.fitness);
+			
+			for (let i = 0; i < competitors.length; i++) {
+				if (Math.random() < Math.pow(i / competitors.length, pressure)) {
+					return competitors[i];
 				}
 			}
-			return best;
+			
+			return competitors[0];
+		}
+
+		function crossover(parent1, parent2) {
+			const crossoverType = crossoverTypeSelect.value;
+			
+			if (crossoverType === 'singlePoint') {
+				const crossoverPoint = Math.floor(Math.random() * parent1.chromosome.length);
+				const child1Chromosome = parent1.chromosome.slice(0, crossoverPoint).concat(parent2.chromosome.slice(crossoverPoint));
+				const child2Chromosome = parent2.chromosome.slice(0, crossoverPoint).concat(parent1.chromosome.slice(crossoverPoint));
+				return [
+					{ chromosome: child1Chromosome, fitness: 0 },
+					{ chromosome: child2Chromosome, fitness: 0 }
+				];
+			} else if (crossoverType === 'twoPoint') {
+				const point1 = Math.floor(Math.random() * parent1.chromosome.length);
+				const point2 = Math.floor(Math.random() * parent1.chromosome.length);
+				const start = Math.min(point1, point2);
+				const end = Math.max(point1, point2);
+				
+				const child1Chromosome = [
+					...parent1.chromosome.slice(0, start),
+					...parent2.chromosome.slice(start, end),
+					...parent1.chromosome.slice(end)
+				];
+				
+				const child2Chromosome = [
+					...parent2.chromosome.slice(0, start),
+					...parent1.chromosome.slice(start, end),
+					...parent2.chromosome.slice(end)
+				];
+				
+				return [
+					{ chromosome: child1Chromosome, fitness: 0 },
+					{ chromosome: child2Chromosome, fitness: 0 }
+				];
+			} else if (crossoverType === 'uniform') {
+				const child1Chromosome = [];
+				const child2Chromosome = [];
+				
+				for (let i = 0; i < parent1.chromosome.length; i++) {
+					if (Math.random() < 0.5) {
+						child1Chromosome.push(parent1.chromosome[i]);
+						child2Chromosome.push(parent2.chromosome[i]);
+					} else {
+						child1Chromosome.push(parent2.chromosome[i]);
+						child2Chromosome.push(parent1.chromosome[i]);
+					}
+				}
+				
+				return [
+					{ chromosome: child1Chromosome, fitness: 0 },
+					{ chromosome: child2Chromosome, fitness: 0 }
+				];
+			}
+		}
+
+		function mutate(individual) {
+			const mutationType = mutationTypeSelect.value;
+			const moves = ['N', 'E', 'S', 'W'];
+			
+			if (mutationType === 'swap') {
+				for (let i = 0; i < individual.chromosome.length; i++) {
+					if (Math.random() < mutationRate) {
+						const swapIndex = Math.floor(Math.random() * individual.chromosome.length);
+						const temp = individual.chromosome[i];
+						individual.chromosome[i] = individual.chromosome[swapIndex];
+						individual.chromosome[swapIndex] = temp;
+					}
+				}
+			} else if (mutationType === 'inversion') {
+				if (Math.random() < mutationRate) {
+					const start = Math.floor(Math.random() * individual.chromosome.length);
+					const end = Math.floor(Math.random() * (individual.chromosome.length - start)) + start;
+					individual.chromosome = [
+						...individual.chromosome.slice(0, start),
+						...individual.chromosome.slice(start, end + 1).reverse(),
+						...individual.chromosome.slice(end + 1)
+					];
+				}
+			} else if (mutationType === 'scramble') {
+				if (Math.random() < mutationRate) {
+					const start = Math.floor(Math.random() * individual.chromosome.length);
+					const end = Math.floor(Math.random() * (individual.chromosome.length - start)) + start;
+					const segment = individual.chromosome.slice(start, end + 1);
+					
+					for (let i = segment.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[segment[i], segment[j]] = [segment[j], segment[i]];
+					}
+					
+					individual.chromosome = [
+						...individual.chromosome.slice(0, start),
+						...segment,
+						...individual.chromosome.slice(end + 1)
+					];
+				}
+			}
+			
+			for (let i = 0; i < individual.chromosome.length; i++) {
+				if (Math.random() < mutationRate) {
+					individual.chromosome[i] = moves[Math.floor(Math.random() * 4)];
+				}
+			}
 		}
 
 		function crossover(parent1, parent2) {
@@ -1223,14 +1412,24 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 
 			while (newPopulation.length < populationSize) {
-				const parent1 = tournamentSelection(population, tournamentSize);
-				const parent2 = tournamentSelection(population, tournamentSize);
+				if (Math.random() < crossoverRate) {
+				const parent1 = tournamentSelection(population, tournamentSize, selectionPressure);
+				const parent2 = tournamentSelection(population, tournamentSize, selectionPressure);
 				let [child1, child2] = crossover(parent1, parent2);
 				mutate(child1);
 				mutate(child2);
 				newPopulation.push(child1);
 				if (newPopulation.length < populationSize) {
 					newPopulation.push(child2);
+				}
+				} else {
+				const individual = tournamentSelection(population, tournamentSize, selectionPressure);
+				newPopulation.push({...individual});
+				}
+				
+				if (Math.random() < diversityPressure) {
+				const randomIndex = Math.floor(Math.random() * newPopulation.length);
+				newPopulation[randomIndex] = createIndividual();
 				}
 			}
 			population = newPopulation;
@@ -1247,7 +1446,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 		drawMaze();
 		const finalPath = calculateFitness(bestIndividualOfAllTime);
-		drawPath(finalPath, '#A84C4C');
+		drawPath(finalPath, 'rgba(179, 54, 156, 0.7)');
 		
 		let solutionFound = false;
 		const lastPoint = finalPath[finalPath.length - 1];
