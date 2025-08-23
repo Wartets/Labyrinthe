@@ -78,6 +78,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	let currentSeed = Date.now();
 
+	let stats = {
+		totalMutations: 0,
+		totalCrossovers: 0,
+		totalEliminated: 0,
+		improvementCount: 0,
+		previousBestFitness: -Infinity,
+		fitnessSum: 0,
+		fitnessSquaredSum: 0,
+		pathLengths: [],
+		generationImprovements: []
+	};
+
 	function setSeed(seed) {
 		currentSeed = seed;
 	}
@@ -532,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			for (let x = 1; x < width - 1; x += 2) {
 				mazeGrid[y][x] = PATH;
 				
-				if (x + 2 < width - 1 && Math.random() > 0.5) {
+				if (x + 2 < width - 1 && seededRandom() > 0.5) {
 					mazeGrid[y][x + 1] = PATH;
 				} else {
 					const opening = runStart + Math.floor(seededRandom() * Math.floor((x - runStart) / 2 + 1)) * 2;
@@ -741,7 +753,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		
 		while (cells.length > 0) {
 			let index;
-			if (Math.random() > 0.5) {
+			if (seededRandom() > 0.5) {
 				index = cells.length - 1;
 			} else {
 				index = Math.floor(seededRandom() * cells.length);
@@ -1240,6 +1252,18 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	solveBtn.addEventListener('click', async () => {
+		stats = {
+			totalMutations: 0,
+			totalCrossovers: 0,
+			totalEliminated: 0,
+			improvementCount: 0,
+			previousBestFitness: -Infinity,
+			fitnessSum: 0,
+			fitnessSquaredSum: 0,
+			pathLengths: [],
+			generationImprovements: []
+		};
+
 		if (!maze) {
 			const messageBox = document.createElement('div');
 			messageBox.style.cssText = `
@@ -1247,7 +1271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
-				background-color: white;
+				background-color: #F7F7F7;
 				padding: 20px;
 				border-radius: 8px;
 				box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -1482,6 +1506,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		function mutate(individual) {
 			const mutationType = mutationTypeSelect.value;
 			const moves = ['N', 'E', 'S', 'W'];
+			let mutationCount = 0;
 			
 			if (mutationType === 'swap') {
 				for (let i = 0; i < individual.chromosome.length; i++) {
@@ -1524,8 +1549,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			for (let i = 0; i < individual.chromosome.length; i++) {
 				if (Math.random() < mutationRate) {
 					individual.chromosome[i] = moves[Math.floor(Math.random() * 4)];
+					mutationCount++;
 				}
 			}
+		
+		stats.totalMutations += mutationCount;
+		return mutationCount;
 		}
 
 		function crossover(parent1, parent2) {
@@ -1569,25 +1598,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
 			while (newPopulation.length < populationSize) {
 				if (Math.random() < crossoverRate) {
-				const parent1 = tournamentSelection(population, tournamentSize, selectionPressure);
-				const parent2 = tournamentSelection(population, tournamentSize, selectionPressure);
-				let [child1, child2] = crossover(parent1, parent2);
-				mutate(child1);
-				mutate(child2);
-				newPopulation.push(child1);
-				if (newPopulation.length < populationSize) {
-					newPopulation.push(child2);
-				}
+					const parent1 = tournamentSelection(population, tournamentSize, selectionPressure);
+					const parent2 = tournamentSelection(population, tournamentSize, selectionPressure);
+					let [child1, child2] = crossover(parent1, parent2);
+					stats.totalCrossovers++;
+					
+					const mutations1 = mutate(child1);
+					const mutations2 = mutate(child2);
+					
+					newPopulation.push(child1);
+					if (newPopulation.length < populationSize) {
+						newPopulation.push(child2);
+					}
 				} else {
-				const individual = tournamentSelection(population, tournamentSize, selectionPressure);
-				newPopulation.push({...individual});
-				}
-				
+					const individual = tournamentSelection(population, tournamentSize, selectionPressure);
+					newPopulation.push({...individual});
+					}
+					
 				if (Math.random() < diversityPressure) {
-				const randomIndex = Math.floor(Math.random() * newPopulation.length);
-				newPopulation[randomIndex] = createIndividual();
+					const randomIndex = Math.floor(Math.random() * newPopulation.length);
+					newPopulation[randomIndex] = createIndividual();
 				}
 			}
+			
+			population.forEach(ind => {
+				const path = calculateFitness(ind);
+				stats.pathLengths.push(path.length);
+				stats.fitnessSum += ind.fitness;
+				stats.fitnessSquaredSum += ind.fitness * ind.fitness;
+			});
+
+			stats.totalEliminated += (populationSize - elitismCount);
+
+			if (bestOfGen.fitness > stats.previousBestFitness) {
+				stats.improvementCount++;
+				stats.generationImprovements.push(gen);
+				stats.previousBestFitness = bestOfGen.fitness;
+			}
+
 			population = newPopulation;
 			
 			statusMessage.textContent = `Génération ${gen + 1} / ${numGenerations} - Meilleure Fitness: ${Math.round(bestIndividualOfAllTime.fitness)}`;
@@ -1610,11 +1658,35 @@ document.addEventListener('DOMContentLoaded', () => {
 			solutionFound = true;
 		}
 
-		statusMessage.textContent = solutionFound ? `Une solution a été trouvée en ${numGenerations} générations` : `Optimisation terminée. La meilleure solution trouvée est affichée.`;
-		
-		if (!solutionFound) {
-			statusMessage.textContent += " La solution n'a pas atteint la sortie. Essayez d'augmenter la 'Longueur Max. du Chemin (Multiplicateur)' ou le nombre de 'Générations'.";
+		const meanFitness = stats.fitnessSum / (populationSize * numGenerations);
+		const variance = (stats.fitnessSquaredSum / (populationSize * numGenerations)) - (meanFitness * meanFitness);
+		const stdDevFitness = Math.sqrt(variance);
+		const meanPathLength = stats.pathLengths.reduce((a, b) => a + b, 0) / stats.pathLengths.length;
+		const improvementPercentage = (stats.improvementCount / numGenerations) * 100;
+
+		let statsHTML = "";
+		if (meanFitness) {statsHTML += "Fitness moyenne: " + meanFitness.toFixed(2) + " | "}
+		if (stdDevFitness) {statsHTML += "Écart-type fitness: " + stdDevFitness.toFixed(2) + " | "}
+		if (stats.totalMutations) {statsHTML += "Mutations appliquées: " + stats.totalMutations + "<br>"}
+		if (stats.totalCrossovers) {statsHTML += "Croisements réalisés: " + stats.totalCrossovers + " | "}
+		if (meanPathLength) {statsHTML += "Profondeur moyenne des chemins: " + meanPathLength.toFixed(0) + " | "}
+		if (stats.totalEliminated) {statsHTML += "Individus éliminés: " + stats.totalEliminated + "<br>"}
+		if (improvementPercentage) {statsHTML += "Pourcentage de générations avec amélioration: " + improvementPercentage.toFixed(1) + "%"}
+
+		if (solutionFound) {
+			statusMessage.innerHTML = `Solution trouvée en ${numGenerations} générations<br>${statsHTML}`;
+		} else {
+			statusMessage.innerHTML = `Optimisation terminée - Aucune solution complète trouvée, augmentez la longueur maximale du chemin ou le nombre de générations.<br>${statsHTML}`;
 		}
+
+		console.log("Statistiques détaillées:");
+		console.log("- Fitness moyenne: " + meanFitness.toFixed(2));
+		console.log("- Écart-type fitness: " + stdDevFitness.toFixed(2));
+		console.log("- Mutations totales: " + stats.totalMutations);
+		console.log("- Croisements totales: " + stats.totalCrossovers);
+		console.log("- Profondeur moyenne des chemins: " + meanPathLength.toFixed(2));
+		console.log("- Individus éliminés: " + stats.totalEliminated);
+		console.log("- Générations avec amélioration: " + stats.improvementCount + " (" + improvementPercentage.toFixed(1) + "%)");
 
 		isSolving = false;
 		solveBtn.disabled = false;
