@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	const ONE_WAY = 2;
 	const LIMITED_PASS = 3;
 
-    const directions = ['north', 'east', 'south', 'west'];
-    const directionArrows = { 'north': '↓', 'east': '←', 'south': '↑', 'west': '→' };
+	const directions = ['north', 'east', 'south', 'west'];
+	const directionArrows = { 'north': '↓', 'east': '←', 'south': '↑', 'west': '→' };
 
 	let maze, start, end, size;
 	let cellSize;
@@ -100,9 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 		}
-
-		const dx = [0, 0, 1, -1];
-		const dy = [1, -1, 0, 0];
+	
+		const dx = [0, 1, 0, -1];
+		const dy = [1, 0, -1, 0];
+		const directionMap = { 'east': 3, 'south': 2, 'west': 1, 'north': 0 };
 
 		while (queue.length > 0) {
 			const { x, y, path, visited, passesRemaining } = queue.shift();
@@ -122,13 +123,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					if (cell === WALL) continue;
 					
 					if (typeof cell === 'object' && cell.type === ONE_WAY) {
-						const direction = cell.direction;
-						const allowed = 
-							(direction === 'north' && i === 2) ||
-							(direction === 'south' && i === 3) ||
-							(direction === 'east' && i === 1) ||
-							(direction === 'west' && i === 0);
-						if (!allowed) continue;
+						const requiredDirection = directionMap[cell.direction];
+						if (i !== requiredDirection) continue;
 					}
 					
 					if (typeof cell === 'object' && cell.type === LIMITED_PASS) {
@@ -940,22 +936,22 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 				ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
 
-                if (typeof maze[y][x] === 'object') {
-                    if (maze[y][x].type === LIMITED_PASS) {
-                        ctx.fillStyle = 'white';
-                        ctx.font = `${cellSize * 0.5}px Arial`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(maze[y][x].passes, (x + 0.5) * cellSize, (y + 0.5) * cellSize);
-                    } else if (maze[y][x].type === ONE_WAY) {
-                        const arrow = directionArrows[maze[y][x].direction];
-                        ctx.fillStyle = 'white';
-                        ctx.font = `${cellSize * 0.6}px Arial`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(arrow, (x + 0.5) * cellSize, (y + 0.5) * cellSize);
-                    }
-                }
+				if (typeof maze[y][x] === 'object') {
+					if (maze[y][x].type === LIMITED_PASS) {
+						ctx.fillStyle = 'white';
+						ctx.font = `${cellSize * 0.5}px Arial`;
+						ctx.textAlign = 'center';
+						ctx.textBaseline = 'middle';
+						ctx.fillText(maze[y][x].passes, (x + 0.5) * cellSize, (y + 0.5) * cellSize);
+					} else if (maze[y][x].type === ONE_WAY) {
+						const arrow = directionArrows[maze[y][x].direction];
+						ctx.fillStyle = 'white';
+						ctx.font = `${cellSize * 0.6}px Arial`;
+						ctx.textAlign = 'center';
+						ctx.textBaseline = 'middle';
+						ctx.fillText(arrow, (x + 0.5) * cellSize, (y + 0.5) * cellSize);
+					}
+				}
 			}
 		}
 
@@ -1210,30 +1206,30 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	canvas.addEventListener('wheel', (e) => {
-        if (mazeAlgorithmSelect.value === 'manual') {
-            const { x, y } = getCellCoordinates(e);
+		if (mazeAlgorithmSelect.value === 'manual') {
+			const { x, y } = getCellCoordinates(e);
 
-            if (x < 0 || x >= size || y < 0 || y >= size || typeof maze[y][x] !== 'object') {
-                return;
-            }
+			if (x < 0 || x >= size || y < 0 || y >= size || typeof maze[y][x] !== 'object') {
+				return;
+			}
 
-            e.preventDefault();
+			e.preventDefault();
 
-            const cell = maze[y][x];
+			const cell = maze[y][x];
 
-            if (cell.type === LIMITED_PASS) {
-                const delta = e.deltaY > 0 ? -1 : 1;
-                cell.passes = Math.max(1, cell.passes + delta);
-            } else if (cell.type === ONE_WAY) {
-                const currentIndex = directions.indexOf(cell.direction);
-                const delta = e.deltaY > 0 ? 1 : -1;
-                const nextIndex = (currentIndex + delta + directions.length) % directions.length;
-                cell.direction = directions[nextIndex];
-            }
-            
-            drawMaze();
-        }
-    });
+			if (cell.type === LIMITED_PASS) {
+				const delta = e.deltaY > 0 ? -1 : 1;
+				cell.passes = Math.max(1, cell.passes + delta);
+			} else if (cell.type === ONE_WAY) {
+				const currentIndex = directions.indexOf(cell.direction);
+				const delta = e.deltaY > 0 ? 1 : -1;
+				const nextIndex = (currentIndex + delta + directions.length) % directions.length;
+				cell.direction = directions[nextIndex];
+			}
+			
+			drawMaze();
+		}
+	});
 
 	canvas.addEventListener('mouseup', () => {
 		isDrawing = false;
