@@ -5,24 +5,29 @@ body {
 }
 .control-panel-bg { background-color: #f8f7fa; }
 .btn-primary { background-color: #7980a8; color: #f8f7fa; }
-.btn-primary:hover { background-color: #8E7361; }
+.btn-primary:hover { background-color: ##404663; }
 .btn-secondary { background-color: #EFEBE8; color: #6B6B6B; }
-.btn-secondary:hover { background-color: #DCD6D1; }
+.btn-secondary:hover { background-color: #D1D5DC; }
 .accent-color { color: #7980a8; }
-.border-color { border-color: #DCD6D1; }
+.border-color { border-color: #D1D5DC; }
 .slider::-webkit-slider-thumb {
 	-webkit-appearance: none;
 	appearance: none;
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 	background: #7980a8;
 	cursor: pointer;
 	border-radius: 50%;
 }
 .slider::-moz-range-thumb {
-	width: 20px;
-	height: 20px;
+	width: 15px;
+	height: 15px;
 	background: #7980a8;
 	cursor: pointer;
 	border-radius: 50%;
+}
+.slider:hover::-webkit-slider-thumb,
+.slider:hover::-moz-range-thumb {
+	background: #404663;
+	box-shadow: 0 4px 8px rgba(64, 70, 99, 0.3);
 }
