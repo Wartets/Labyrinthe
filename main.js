@@ -168,6 +168,82 @@ document.addEventListener('DOMContentLoaded', () => {
 		return { pathFound: false, shortestPath: null };
 	}
 
+	function calculateMazeStats(maze) {
+		const rows = maze.length;
+		const cols = maze[0].length;
+		const totalCells = rows * cols;
+		
+		let wallCount = 0;
+		for (let y = 0; y < rows; y++) {
+			for (let x = 0; x < cols; x++) {
+				if (maze[y][x] === WALL) wallCount++;
+			}
+		}
+		const wallDensity = (wallCount / totalCells).toFixed(3);
+
+		let branchingSum = 0;
+		let intersectionCount = 0;
+
+		for (let y = 0; y < rows; y++) {
+			for (let x = 0; x < cols; x++) {
+				if (maze[y][x] === WALL) continue;
+				
+				let paths = 0;
+				if (y > 0 && maze[y-1][x] !== WALL) paths++;
+				if (y < rows-1 && maze[y+1][x] !== WALL) paths++;
+				if (x > 0 && maze[y][x-1] !== WALL) paths++;
+				if (x < cols-1 && maze[y][x+1] !== WALL) paths++;
+
+				if (paths > 2) {
+					branchingSum += paths;
+					intersectionCount++;
+				}
+			}
+		}
+
+		const avgBranching = intersectionCount > 0 ? (branchingSum / intersectionCount).toFixed(2) : "0";
+
+		let cycles = 0;
+		let corridors = 0;
+		let cycleRate = "N/A";
+		
+		if (wallDensity > 0.1) {
+			let visited = Array(rows).fill().map(() => Array(cols).fill(false));
+			let startTime = Date.now();
+			const TIME_LIMIT = 100;
+			
+			for (let y = 0; y < rows; y++) {
+				for (let x = 0; x < cols; x++) {
+					if (Date.now() - startTime > TIME_LIMIT) break;
+					
+					if (!visited[y][x] && maze[y][x] !== WALL) {
+						let paths = 0;
+						if (y > 0 && maze[y-1][x] !== WALL) paths++;
+						if (y < rows-1 && maze[y+1][x] !== WALL) paths++;
+						if (x > 0 && maze[y][x-1] !== WALL) paths++;
+						if (x < cols-1 && maze[y][x+1] !== WALL) paths++;
+						
+						if (paths === 1) corridors++;
+						
+						if (paths > 2) {
+							cycles += paths - 2;
+						}
+					}
+				}
+				if (Date.now() - startTime > TIME_LIMIT) break;
+			}
+			
+			cycleRate = (cycles / totalCells).toFixed(3);
+		}
+
+		return {
+			wallDensity,
+			cycleRate,
+			corridors,
+			avgBranching
+		};
+	}
+	
 	const updateSliderValue = (slider, display, formatter) => {
 		display.textContent = formatter(slider.value);
 		slider.addEventListener('input', (e) => {
@@ -1124,20 +1200,28 @@ document.addEventListener('DOMContentLoaded', () => {
 		const selectedAlgorithm = mazeAlgorithmSelect.value;
 		if (selectedAlgorithm === 'manual') {
 			const { pathFound, shortestPath } = hasValidPath(maze, start, end);
+			
+			let stats; /* = calculateMazeStats(maze); */
+			
 			if (pathFound) {
 				drawMaze();
 				drawPath(shortestPath, 'rgba(76, 175, 80, 0.7)');
-				statusMessage.textContent = "Labyrinthe valide ! Un chemin existe.";
+				statusMessage.innerHTML = `Labyrinthe valide.`
 				solveBtn.disabled = false;
 				solveBtn.textContent = "Résoudre";
 			} else {
-				statusMessage.textContent = "Attention : Aucun chemin n'existe entre le début et la fin.";
-				solveBtn.disabled = true;
-				solveBtn.textContent = "Résoudre";
+				statusMessage.innerHTML = 
+				statusMessage.innerHTML = `Aucun chemin trouvé.`
+				solveBtn.disabled = false;
+				solveBtn.textContent = "Résoudre quand même";
+			}
+			if (stats) {
+				statusMessage.innerHTML	+= "<br>" + `Densité: ${stats.wallDensity} | ` + `Cycles: ${stats.cycleRate} | ` + `Couloirs: ${stats.corridors} | ` + `Branchement: ${stats.avgBranching}`;
 			}
 		} else {
 			initNewMaze();
 			solveBtn.disabled = false;
+			solveBtn.textContent = "Résoudre";
 		}
 	});
 
