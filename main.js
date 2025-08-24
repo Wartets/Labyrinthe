@@ -1099,8 +1099,8 @@ function resizeMaze(newSize) {
 	const oldMaze = maze;
 	const newMaze = Array(newSize).fill(null).map(() => Array(newSize).fill(WALL));
 	
-	const scaleX = (newSize - 1) / (oldSize - 1);
-	const scaleY = (newSize - 1) / (oldSize - 1);
+	const scaleX = newSize / oldSize;
+	const scaleY = newSize / oldSize;
 	
 	for (let y = 0; y < newSize; y++) {
 		for (let x = 0; x < newSize; x++) {
@@ -1117,8 +1117,14 @@ function resizeMaze(newSize) {
 		}
 	}
 
-	start = { x: 1, y: 1 };
-	end = { x: newSize - 2, y: newSize - 2 };
+	start = {
+		x: Math.min(newSize - 2, Math.max(1, Math.floor(start.x * scaleX))),
+		y: Math.min(newSize - 2, Math.max(1, Math.floor(start.y * scaleY)))
+	};
+	end = {
+		x: Math.min(newSize - 2, Math.max(1, Math.floor(end.x * scaleX))),
+		y: Math.min(newSize - 2, Math.max(1, Math.floor(end.y * scaleY)))
+	};
 	
 	newMaze[start.y][start.x] = PATH;
 	newMaze[end.y][end.x] = PATH;
@@ -1227,12 +1233,36 @@ generateBtn.addEventListener('click', () => {
 	}
 });
 
+setStartBtn.addEventListener('click', () => {
+	drawingMode = 'start';
+	setStartBtn.classList.replace('btn-secondary', 'btn-primary');
+	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
+	eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
+	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
+	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
+	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
+	statusMessage.textContent = "Mode : Définir le point de départ";
+});
+
+setEndBtn.addEventListener('click', () => {
+	drawingMode = 'end';
+	setEndBtn.classList.replace('btn-secondary', 'btn-primary');
+	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+	eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
+	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
+	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
+	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
+	statusMessage.textContent = "Mode : Définir le point d'arrivée";
+});
+
 drawWallBtn.addEventListener('click', () => {
 	drawingMode = 'wall';
 	drawWallBtn.classList.replace('btn-secondary', 'btn-primary');
 	eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
+	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 	statusMessage.textContent = "Mode : Dessiner un mur";
 });
 
@@ -1242,6 +1272,8 @@ drawOneWayBtn.addEventListener('click', () => {
 	eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
+	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 	statusMessage.textContent = "Mode : Dessiner un passage à sens unique";
 });
 
@@ -1251,6 +1283,8 @@ drawLimitedBtn.addEventListener('click', () => {
 	eraseWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
+	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 	statusMessage.textContent = "Mode : Dessiner un passage limité";
 });
 
@@ -1260,17 +1294,19 @@ eraseWallBtn.addEventListener('click', () => {
 	eraseWallBtn.classList.replace('btn-secondary', 'btn-primary');
 	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
+	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 	statusMessage.textContent = "Mode : Effacer un mur";
 });
 
 clearMazeBtn.addEventListener('click', () => {
-	if (mazeAlgorithmSelect.value === 'manual') {
-		maze = Array(size).fill(null).map(() => Array(size).fill(PATH));
-		maze[start.y][start.x] = PATH;
-		maze[end.y][end.x] = PATH;
-		drawMaze();
-		statusMessage.textContent = "Canevas effacé.";
-	}
+	maze = Array(size).fill(null).map(() => Array(size).fill(PATH));
+	maze[start.y][start.x] = PATH;
+	maze[end.y][end.x] = PATH;
+	drawMaze();
+	statusMessage.textContent = "Canevas effacé.";
+	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 });
 
 function getCellCoordinates(event) {
@@ -1288,8 +1324,28 @@ canvas.addEventListener('mousedown', (e) => {
 		
 		isDrawing = true;
 		const { x, y } = getCellCoordinates(e);
+		
 		if (x >= 0 && x < size && y >= 0 && y < size) {
-			if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) return;
+			if (drawingMode === 'start' || drawingMode === 'end') {
+				if (maze[y][x] !== WALL) {
+					if (drawingMode === 'start') {
+						maze[start.y][start.x] = PATH;
+						start = { x, y };
+					} else {
+						maze[end.y][end.x] = PATH;
+						end = { x, y };
+					}
+					maze[y][x] = PATH;
+					drawMaze();
+					setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+					setEndBtn.classList.replace('btn-primary', 'btn-secondary');
+				}
+				return;
+			}
+			
+			if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
+				return;
+			}
 			
 			if (drawingMode === 'wall') {
 				maze[y][x] = WALL;
@@ -1337,10 +1393,10 @@ canvas.addEventListener('mouseup', () => {
 	isDrawing = false;
 });
 
-canvas.addEventListener('mouseleave', () => {
+/* canvas.addEventListener('mouseleave', () => {
 	isDrawing = false;
 });
-
+ */
 function createGeneticAlgorithmContext() {
 	return {
 		totalMutations: 0,
@@ -1542,7 +1598,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 		
 		return competitors[0];
 	}
-    
+	
 	function crossover(parent1, parent2) {
 		const crossoverType = crossoverTypeSelect.value;
 		
@@ -1794,16 +1850,16 @@ solveBtn.addEventListener('click', async () => {
 });
 
 continueBtn.addEventListener('click', async () => {
-    if (!lastRunState || JSON.stringify(maze) !== lastRunState.maze) {
-        alert("Le labyrinthe a changé, impossible de continuer");
-        return;
-    }
+	if (!lastRunState || JSON.stringify(maze) !== lastRunState.maze) {
+		alert("Le labyrinthe a changé, impossible de continuer");
+		return;
+	}
 
-    await runGeneticAlgorithm(
-        lastRunState.generation,
-        lastRunState.population,
-        lastRunState.bestIndividual
-    );
+	await runGeneticAlgorithm(
+		lastRunState.generation,
+		lastRunState.population,
+		lastRunState.bestIndividual
+	);
 });
 
 document.addEventListener('DOMContentLoaded', () => {
