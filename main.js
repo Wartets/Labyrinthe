@@ -275,6 +275,7 @@ updateSliderValue(collisionPenaltySlider, collisionPenaltyValue, v => v);
 
 mazeSizeSlider.addEventListener('input', () => {
 	if (mazeAlgorithmSelect.value === 'manual' && maze) {
+		continueBtn.style.display = 'none';
 		const newSize = parseInt(mazeSizeSlider.value);
 		
 		if (newSize !== size) {
@@ -1208,6 +1209,7 @@ function initNewMaze() {
 
 generateBtn.addEventListener('click', () => {
 	const selectedAlgorithm = mazeAlgorithmSelect.value;
+	continueBtn.style.display = 'none';
 	if (selectedAlgorithm === 'manual') {
 		const { pathFound, shortestPath } = hasValidPath(maze, start, end);
 		
@@ -1291,6 +1293,7 @@ drawLimitedBtn.addEventListener('click', () => {
 });
 
 eraseWallBtn.addEventListener('click', () => {
+	continueBtn.style.display = 'none';
 	drawingMode = 'path';
 	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	eraseWallBtn.classList.replace('btn-secondary', 'btn-primary');
