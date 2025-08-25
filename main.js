@@ -76,6 +76,8 @@ let isSolving = false;
 let drawingMode = null;
 let isDrawing = false;
 
+let lastCell = null;
+
 let lastRunState = null;
 
 let currentSeed = Date.now();
@@ -1321,9 +1323,9 @@ function getCellCoordinates(event) {
 canvas.addEventListener('mousedown', (e) => {
 	if (mazeAlgorithmSelect.value === 'manual' && drawingMode) {
 		continueBtn.style.display = 'none';
-		
 		isDrawing = true;
 		const { x, y } = getCellCoordinates(e);
+		lastCell = { x, y };
 		
 		if (x >= 0 && x < size && y >= 0 && y < size) {
 			if (drawingMode === 'start' || drawingMode === 'end') {
@@ -1343,6 +1345,32 @@ canvas.addEventListener('mousedown', (e) => {
 				return;
 			}
 			
+			if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
+				return;
+			}
+			
+			if (drawingMode === 'wall') {
+				maze[y][x] = WALL;
+			} else if (drawingMode === 'path') {
+				maze[y][x] = PATH;
+			} else if (drawingMode === 'one_way') {
+				maze[y][x] = { type: ONE_WAY, direction: 'north' };
+			} else if (drawingMode === 'limited') {
+				maze[y][x] = { type: LIMITED_PASS, passes: 1 };
+			}
+			drawMaze();
+		}
+	}
+});
+
+canvas.addEventListener('mousemove', (e) => {
+	if (isDrawing && drawingMode && drawingMode !== 'start' && drawingMode !== 'end') {
+		const { x, y } = getCellCoordinates(e);
+		
+		if (lastCell && lastCell.x === x && lastCell.y === y) return;
+		lastCell = { x, y };
+		
+		if (x >= 0 && x < size && y >= 0 && y < size) {
 			if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
 				return;
 			}
@@ -1391,12 +1419,14 @@ canvas.addEventListener('wheel', (e) => {
 
 canvas.addEventListener('mouseup', () => {
 	isDrawing = false;
+	lastCell = null;
 });
 
-/* canvas.addEventListener('mouseleave', () => {
+canvas.addEventListener('mouseleave', () => {
 	isDrawing = false;
+	lastCell = null;
 });
- */
+
 function createGeneticAlgorithmContext() {
 	return {
 		totalMutations: 0,
