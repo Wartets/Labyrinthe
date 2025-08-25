@@ -60,6 +60,7 @@ const progressWeightSlider = document.getElementById('progressWeight');
 const progressWeightValue = document.getElementById('progressWeightValue');
 const collisionPenaltySlider = document.getElementById('collisionPenalty');
 const collisionPenaltyValue = document.getElementById('collisionPenaltyValue');
+const allowDiagonalCheckbox = document.getElementById('allowDiagonal');
 
 const PATH = 0;
 const WALL = 1;
@@ -68,6 +69,8 @@ const LIMITED_PASS = 3;
 
 const directions = ['north', 'east', 'south', 'west'];
 const directionArrows = { 'north': '↓', 'east': '←', 'south': '↑', 'west': '→' };
+
+let allowDiagonal = false;
 
 let maze, start, end, size;
 let cellSize;
@@ -120,6 +123,9 @@ function hasValidPath(mazeGrid, startPos, endPos) {
 	const dx = [0, 1, 0, -1];
 	const dy = [1, 0, -1, 0];
 	const directionMap = { 'east': 3, 'south': 2, 'west': 1, 'north': 0 };
+	
+	const diagDx = [1, 1, -1, -1];
+	const diagDy = [-1, 1, 1, -1];
 
 	while (queue.length > 0) {
 		const { x, y, path, visited, passesRemaining } = queue.shift();
@@ -164,6 +170,44 @@ function hasValidPath(mazeGrid, startPos, endPos) {
 						visited: newVisited,
 						passesRemaining: newPassesRemaining
 					});
+				}
+			}
+		}
+
+		if (allowDiagonal) {
+			for (let i = 0; i < 4; i++) {
+				const newX = x + diagDx[i];
+				const newY = y + diagDy[i];
+				const newPosKey = `${newX},${newY}`;
+				
+				const adj1X = x + diagDx[i];
+				const adj1Y = y;
+				const adj2X = x;
+				const adj2Y = y + diagDy[i];
+
+				if (newX >= 0 && newX < cols && newY >= 0 && newY < rows &&
+					adj1X >= 0 && adj1X < cols && adj1Y >= 0 && adj1Y < rows &&
+					adj2X >= 0 && adj2X < cols && adj2Y >= 0 && adj2Y < rows) {
+					
+					if (mazeGrid[newY][newX] !== PATH) continue;
+					if (mazeGrid[adj1Y][adj1X] !== PATH) continue;
+					if (mazeGrid[adj2Y][adj2X] !== PATH) continue;
+					
+					const cell = mazeGrid[newY][newX];
+					
+					if (!visited.has(newPosKey)) {
+						const newVisited = new Set(visited);
+						const newPassesRemaining = { ...passesRemaining };
+						
+						newVisited.add(newPosKey);
+						queue.push({
+							x: newX,
+							y: newY,
+							path: [...path, { x, y }],
+							visited: newVisited,
+							passesRemaining: newPassesRemaining
+						});
+					}
 				}
 			}
 		}
@@ -286,6 +330,11 @@ mazeSizeSlider.addEventListener('input', () => {
 	}
 });
 
+allowDiagonalCheckbox.addEventListener('change', (e) => {
+	allowDiagonal = e.target.checked;
+	continueBtn.style.display = 'none';
+});
+	
 mazeAlgorithmSelect.addEventListener('change', (e) => {
 	const selectedMode = e.target.value;
 	const isManual = selectedMode === 'manual';
@@ -1502,10 +1551,12 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	const fitnessHistory = [];
 
 	function createIndividual() {
-		const moves = ['N', 'E', 'S', 'W'];
+		const moves = allowDiagonal ? 
+			['N', 'E', 'S', 'W', 'NE', 'SE', 'SW', 'NW'] : 
+			['N', 'E', 'S', 'W'];
 		let chromosome = [];
 		for (let i = 0; i < pathLength; i++) {
-			chromosome.push(moves[Math.floor(Math.random() * 4)]);
+			chromosome.push(moves[Math.floor(Math.random() * moves.length)]);
 		}
 		return { chromosome: chromosome, fitness: 0 };
 	}
@@ -1535,16 +1586,68 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 			}
 		}
 
+		// Définir les mouvements possibles en fonction de l'option allowDiagonal
+		const moves = allowDiagonal ? 
+			['N', 'E', 'S', 'W', 'NE', 'SE', 'SW', 'NW'] : 
+			['N', 'E', 'S', 'W'];
+
 		for (const move of individual.chromosome) {
 			let nextPos = { ...pos };
-			if (move === 'N') nextPos.y--;
-			else if (move === 'E') nextPos.x++;
-			else if (move === 'S') nextPos.y++;
-			else if (move === 'W') nextPos.x--;
+			let moved = false;
+			
+			if (move === 'N') {
+				nextPos.y--;
+				moved = true;
+			} else if (move === 'E') {
+				nextPos.x++;
+				moved = true;
+			} else if (move === 'S') {
+				nextPos.y++;
+				moved = true;
+			} else if (move === 'W') {
+				nextPos.x--;
+				moved = true;
+			} else if (allowDiagonal) {
+				// Mouvements diagonaux
+				if (move === 'NE') { 
+					nextPos.x++; nextPos.y--;
+					moved = true;
+				} else if (move === 'SE') { 
+					nextPos.x++; nextPos.y++;
+					moved = true;
+				} else if (move === 'SW') { 
+					nextPos.x--; nextPos.y++;
+					moved = true;
+				} else if (move === 'NW') { 
+					nextPos.x--; nextPos.y--;
+					moved = true;
+				}
+			}
+
+			if (!moved) continue;
 
 			if (nextPos.x < 0 || nextPos.x >= size || nextPos.y < 0 || nextPos.y >= size) {
 				score += collisionPenalty;
 				continue;
+			}
+
+			// Pour les mouvements diagonaux, vérifier que les cases intermédiaires sont libres
+			if (allowDiagonal && (move === 'NE' || move === 'SE' || move === 'SW' || move === 'NW')) {
+				const adj1X = move === 'NE' || move === 'SE' ? pos.x + 1 : pos.x - 1;
+				const adj1Y = pos.y;
+				const adj2X = pos.x;
+				const adj2Y = move === 'NE' || move === 'NW' ? pos.y - 1 : pos.y + 1;
+				
+				if (adj1X < 0 || adj1X >= size || adj1Y < 0 || adj1Y >= size ||
+					adj2X < 0 || adj2X >= size || adj2Y < 0 || adj2Y >= size) {
+					score += collisionPenalty;
+					continue;
+				}
+				
+				if (maze[adj1Y][adj1X] === WALL || maze[adj2Y][adj2X] === WALL) {
+					score += collisionPenalty;
+					continue;
+				}
 			}
 
 			const cell = maze[nextPos.y][nextPos.x];
@@ -1561,6 +1664,11 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 					move === 'S' ? 'north' :
 					move === 'N' ? 'south' :
 					move === 'W' ? 'east' :
+					move === 'E' ? 'west' :
+					// Pour les diagonales, on considère la direction principale
+					move === 'NE' ? 'east' : // Approximation
+					move === 'SE' ? 'east' :
+					move === 'SW' ? 'west' :
 					'west';
 					
 				if (moveDirection !== direction) {
@@ -1612,7 +1720,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 		individual.fitness = score;
 		return path;
 	}
-
+	
 	function tournamentSelection(pop, tournamentSizeParam, pressure) {
 		const currentTournamentSize = tournamentSizeParam;
 		let competitors = [];
@@ -1688,7 +1796,9 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 
 	function mutate(individual) {
 		const mutationType = mutationTypeSelect.value;
-		const moves = ['N', 'E', 'S', 'W'];
+		const moves = allowDiagonal ? 
+			['N', 'E', 'S', 'W', 'NE', 'SE', 'SW', 'NW'] : 
+			['N', 'E', 'S', 'W'];
 		let mutationCount = 0;
 		
 		if (mutationType === 'swap') {
@@ -1731,11 +1841,11 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 		
 		for (let i = 0; i < individual.chromosome.length; i++) {
 			if (Math.random() < mutationRate) {
-				individual.chromosome[i] = moves[Math.floor(Math.random() * 4)];
+				individual.chromosome[i] = moves[Math.floor(Math.random() * moves.length)];
 				mutationCount++;
 			}
 		}
-	
+
 		stats.totalMutations += mutationCount;
 		return mutationCount;
 	}

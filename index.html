@@ -154,26 +154,38 @@
 						<div class="border-t border-color pt-4 mt-4">
 							<h3 class="text-lg font-semibold mb-3 text-gray-800">Paramètres Avancés</h3>
 
-							<div>
-								<label for="animSpeed" class="block text-sm font-medium text-gray-700">Vitesse d'animation: <span id="animSpeedValue" class="font-bold accent-color">10ms</span></label>
-								<input id="animSpeed" type="range" min="0" max="2000" step="10" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-								<p class="text-xs text-gray-500 mt-1">Contrôle la vitesse de visualisation de la résolution (n'affecte pas la vitesse de calcul).</p>
-							</div>
-							
-							<div class="mt-4">
-								<label for="crossoverRate" class="block text-sm font-medium text-gray-700">Taux de Croisement: <span id="crossoverRateValue" class="font-bold accent-color">80%</span></label>
-								<input id="crossoverRate" type="range" min="0" max="100" step="1" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-								<p class="text-xs text-gray-500 mt-1">Probabilité que deux individus se reproduisent pour créer une nouvelle génération.</p>
-							</div>
-							
-							<div class="mt-4">
-								<label for="crossoverType" class="block text-sm font-medium text-gray-700">Type de Croisement:</label>
-								<select id="crossoverType" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-accent-color focus:border-accent-color">
-									<option value="singlePoint">Point unique</option>
-									<option value="twoPoint">Deux points</option>
-									<option value="uniform">Uniforme</option>
-								</select>
-								<p class="text-xs text-gray-500 mt-1">Méthode utilisée pour combiner les gènes des parents lors de la reproduction.</p>
+							<div class="border-t border-color pt-4 mt-4">
+								<h3 class="text-lg font-semibold mb-3 text-gray-800">Paramètres Avancés</h3>
+
+								<div class="control-group mt-4">
+									<div class="flex items-center">
+										<input type="checkbox" id="allowDiagonal" name="allowDiagonal" class="h-4 w-4 accent-color focus:ring-accent-color">
+										<label for="allowDiagonal" class="ml-2 block text-sm font-medium text-gray-700">Autoriser les déplacements en diagonale</label>
+									</div>
+									<p class="text-xs text-gray-500 mt-1 ml-6">Permet aux individus de se déplacer en diagonale uniquement si les 4 cases concernées sont libres (pas de mur). Réduit la distance parcourue.</p>
+								</div>
+
+								<div class="mt-4">
+									<label for="animSpeed" class="block text-sm font-medium text-gray-700">Vitesse d'animation: <span id="animSpeedValue" class="font-bold accent-color">10ms</span></label>
+									<input id="animSpeed" type="range" min="0" max="2000" step="10" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+									<p class="text-xs text-gray-500 mt-1">Contrôle la vitesse de visualisation de la résolution (n'affecte pas la vitesse de calcul).</p>
+								</div>
+								
+								<div class="mt-4">
+									<label for="crossoverRate" class="block text-sm font-medium text-gray-700">Taux de Croisement: <span id="crossoverRateValue" class="font-bold accent-color">80%</span></label>
+									<input id="crossoverRate" type="range" min="0" max="100" step="1" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+									<p class="text-xs text-gray-500 mt-1">Probabilité que deux individus se reproduisent pour créer une nouvelle génération.</p>
+								</div>
+								
+								<div class="mt-4">
+									<label for="crossoverType" class="block text-sm font-medium text-gray-700">Type de Croisement:</label>
+									<select id="crossoverType" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-accent-color focus:border-accent-color">
+										<option value="singlePoint">Point unique</option>
+										<option value="twoPoint">Deux points</option>
+										<option value="uniform">Uniforme</option>
+									</select>
+									<p class="text-xs text-gray-500 mt-1">Méthode utilisée pour combiner les gènes des parents lors de la reproduction.</p>
+								</div>
 							</div>
 							
 							<div class="mt-4">
