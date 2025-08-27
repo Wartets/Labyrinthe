@@ -62,7 +62,7 @@ const collisionPenaltySlider = document.getElementById('collisionPenalty');
 const collisionPenaltyValue = document.getElementById('collisionPenaltyValue');
 let allowDiagonalCheckbox;
 allowDiagonalCheckbox = document.getElementById('allowDiagonal');
-
+	
 const PATH = 0;
 const WALL = 1;
 const ONE_WAY = 2;
@@ -1524,9 +1524,9 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	continueBtn.disabled = true;
 	generateBtn.disabled = true;
 	
-    if (allowDiagonalCheckbox) {
-        allowDiagonalCheckbox.disabled = true;
-    }
+	if (allowDiagonalCheckbox) {
+		allowDiagonalCheckbox.disabled = true;
+	}
 	
 	solveBtn.textContent = startGeneration === 0 ? "Résolution en cours..." : "Reprise en cours...";
 	solveBtn.classList.replace('btn-primary', 'btn-secondary');
@@ -1982,9 +1982,9 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	continueBtn.disabled = false;
 	generateBtn.disabled = false;
 	
-    if (allowDiagonalCheckbox) {
-        allowDiagonalCheckbox.disabled = false;
-    }
+	if (allowDiagonalCheckbox) {
+		allowDiagonalCheckbox.disabled = false;
+	}
 	
 	solveBtn.textContent = "Résoudre";
 	solveBtn.classList.replace('btn-secondary', 'btn-primary');

@@ -32,61 +32,61 @@ body {
 	box-shadow: 0 4px 8px rgba(64, 70, 99, 0.3);
 }
 .custom-checkbox-container {
-    display: flex;
-    align-items: center;
+	display: flex;
+	align-items: center;
 }
 .custom-checkbox-input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
+	position: absolute;
+	opacity: 0;
+	cursor: pointer;
 }
 .custom-checkbox-label {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-    position: relative;
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	position: relative;
 }
 .checkmark {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    background-color: #f8f7fa;
-    border: 2px solid #7980a8;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	background-color: #f8f7fa;
+	border: 2px solid #7980a8;
+	border-radius: 4px;
+	transition: all 0.2s ease;
 }
 .custom-checkbox-input:checked ~ .custom-checkbox-label .checkmark {
-    background-color: #7980a8;
-    border-color: #7980a8;
+	background-color: #7980a8;
+	border-color: #7980a8;
 }
 .custom-checkbox-input:checked ~ .custom-checkbox-label .checkmark svg path {
-    stroke: #f8f7fa;
+	stroke: #f8f7fa;
 }
 .checkmark svg {
-    width: 12px;
-    height: 10px;
+	width: 12px;
+	height: 10px;
 }
 .checkmark svg path {
-    stroke: transparent;
-    transition: stroke 0.2s ease;
+	stroke: transparent;
+	transition: stroke 0.2s ease;
 }
 .custom-checkbox-input:focus ~ .custom-checkbox-label .checkmark {
-    box-shadow: 0 0 0 3px rgba(121, 128, 168, 0.3);
+	box-shadow: 0 0 0 3px rgba(121, 128, 168, 0.3);
 }
 .custom-checkbox-label:hover .checkmark {
-    border-color: #394063;
+	border-color: #394063;
 }
 .custom-checkbox-input:checked ~ .custom-checkbox-label:hover .checkmark {
-    background-color: #394063;
-    border-color: #394063;
+	background-color: #394063;
+	border-color: #394063;
 }
 .custom-checkbox-input:disabled ~ .custom-checkbox-label {
-    cursor: not-allowed;
-    opacity: 0.6;
+	cursor: not-allowed;
+	opacity: 0.6;
 }
 .custom-checkbox-input:disabled ~ .custom-checkbox-label .checkmark {
-    background-color: #D1D5DC;
-    border-color: #D1D5DC;
+	background-color: #D1D5DC;
+	border-color: #D1D5DC;
 }
