@@ -31,6 +31,7 @@ const pathLengthMultiplierValue = document.getElementById('pathLengthMultiplierV
 const generateBtn = document.getElementById('generateBtn');
 const solveBtn = document.getElementById('solveBtn');
 const continueBtn = document.getElementById('continueBtn');
+const statusContainer = document.getElementById('status-container');
 const statusMessage = document.getElementById('status-message');
 
 const opennessRateDiv = document.getElementById('opennessRate').parentElement;
@@ -79,6 +80,10 @@ let cellSize;
 let isSolving = false;
 let drawingMode = null;
 let isDrawing = false;
+
+let startTime = 0;
+let lastUpdateTime = 0;
+let generationCount = 0;
 
 let lastCell = null;
 
@@ -326,7 +331,7 @@ mazeSizeSlider.addEventListener('input', () => {
 		if (newSize !== size) {
 			resizeMaze(newSize);
 			drawMaze();
-			statusMessage.textContent = `Labyrinthe redimensionné à ${newSize}x${newSize}. Vous pouvez continuer à dessiner.`;
+			statusMessage.autoHideContent = `Labyrinthe redimensionné à ${newSize}x${newSize}. Vous pouvez continuer à dessiner.`;
 		}
 	}
 });
@@ -379,7 +384,7 @@ function doubleResolution() {
     mazeSizeValue.textContent = `${newSize}x${newSize}`;
     resizeMaze(newSize);
     drawMaze();
-    statusMessage.textContent = `Résolution doublée : ${newSize}x${newSize}`;
+    statusMessage.autoHideContent = `Résolution doublée : ${newSize}x${newSize}`;
 }
 
 function halveResolution() {
@@ -389,7 +394,7 @@ function halveResolution() {
     mazeSizeValue.textContent = `${newSize}x${newSize}`;
     resizeMaze(newSize);
     drawMaze();
-    statusMessage.textContent = `Résolution réduite : ${newSize}x${newSize}`;
+    statusMessage.autoHideContent = `Résolution réduite : ${newSize}x${newSize}`;
 }
 
 function generateMazeDFS(width, height, opennessPercent, currentMazeSeed) {
@@ -1223,7 +1228,7 @@ function initNewMaze() {
 		}
 		
 		drawMaze();
-		statusMessage.textContent = "Mode 'Dessin manuel' activé. Créez votre labyrinthe !";
+		statusMessage.autoHideContent = "Mode 'Dessin manuel' activé. Créez votre labyrinthe !";
 		return;
 	}
 
@@ -1273,9 +1278,22 @@ function initNewMaze() {
 			maze = generateMazeDFS(size, size, openness, currentMazeSeed);
 	}
 	
-	drawMaze();
-	statusMessage.textContent = ""; 
+	drawMaze(); 
 }
+
+Object.defineProperty(statusMessage, 'autoHideContent', {
+    set: function(value) {
+        this.innerHTML = value;
+        if (!value.trim()) {
+            statusContainer.classList.add('hidden');
+        } else {
+            statusContainer.classList.remove('hidden');
+        }
+    },
+    get: function() {
+        return this.innerHTML;
+    }
+});
 
 document.getElementById('doubleResBtn').addEventListener('click', doubleResolution);
 document.getElementById('halveResBtn').addEventListener('click', halveResolution);
@@ -1295,7 +1313,6 @@ generateBtn.addEventListener('click', () => {
 			solveBtn.disabled = false;
 			solveBtn.textContent = "Résoudre";
 		} else {
-			statusMessage.innerHTML = 
 			statusMessage.innerHTML = `Aucun chemin trouvé.`
 			solveBtn.disabled = false;
 			solveBtn.textContent = "Résoudre quand même";
@@ -1318,7 +1335,7 @@ setStartBtn.addEventListener('click', () => {
 	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = "Mode : Définir le point de départ";
+	statusMessage.autoHideContent = "Mode : Définir le point de départ";
 });
 
 setEndBtn.addEventListener('click', () => {
@@ -1329,7 +1346,7 @@ setEndBtn.addEventListener('click', () => {
 	drawWallBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = "Mode : Définir le point d'arrivée";
+	statusMessage.autoHideContent = "Mode : Définir le point d'arrivée";
 });
 
 drawWallBtn.addEventListener('click', () => {
@@ -1340,7 +1357,7 @@ drawWallBtn.addEventListener('click', () => {
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
 	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
 	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = "Mode : Dessiner un mur";
+	statusMessage.autoHideContent = "Mode : Dessiner un mur";
 });
 
 drawOneWayBtn.addEventListener('click', () => {
@@ -1351,7 +1368,7 @@ drawOneWayBtn.addEventListener('click', () => {
 	drawLimitedBtn.classList.replace('btn-primary', 'btn-secondary');
 	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
 	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = "Mode : Dessiner un passage à sens unique";
+	statusMessage.autoHideContent = "Mode : Dessiner un passage à sens unique";
 });
 
 drawLimitedBtn.addEventListener('click', () => {
@@ -1362,7 +1379,7 @@ drawLimitedBtn.addEventListener('click', () => {
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
 	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
 	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = "Mode : Dessiner un passage limité";
+	statusMessage.autoHideContent = "Mode : Dessiner un passage limité";
 });
 
 eraseWallBtn.addEventListener('click', () => {
@@ -1374,7 +1391,7 @@ eraseWallBtn.addEventListener('click', () => {
 	drawOneWayBtn.classList.replace('btn-primary', 'btn-secondary');
 	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
 	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = "Mode : Effacer un mur";
+	statusMessage.autoHideContent = "Mode : Effacer un mur";
 });
 
 clearMazeBtn.addEventListener('click', () => {
@@ -1382,7 +1399,7 @@ clearMazeBtn.addEventListener('click', () => {
 	maze[start.y][start.x] = PATH;
 	maze[end.y][end.x] = PATH;
 	drawMaze();
-	statusMessage.textContent = "Canevas effacé.";
+	statusMessage.autoHideContent = "Canevas effacé.";
 	setStartBtn.classList.replace('btn-primary', 'btn-secondary');
 	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 });
@@ -1542,6 +1559,11 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	}
 	if (isSolving) return;
 
+	startTime = performance.now();
+	lastUpdateTime = startTime;
+	generationCount = 0;
+	document.getElementById('progressInfo').classList.remove('hidden');
+
 	isSolving = true;
 	solveBtn.disabled = true;
 	continueBtn.disabled = true;
@@ -1553,8 +1575,10 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	
 	solveBtn.textContent = startGeneration === 0 ? "Résolution en cours..." : "Reprise en cours...";
 	solveBtn.classList.replace('btn-primary', 'btn-secondary');
-	statusMessage.textContent = startGeneration === 0 ? "Initialisation de l'algorithme..." : "Reprise de l'algorithme...";
-	
+	statusMessage.innerHTML = startGeneration === 0 ? 
+		"<div class='text-left'>Initialisation de l'algorithme...</div>" : 
+		"<div class='text-left'>Reprise de l'algorithme...</div>";
+		
 	const animSpeedConst = parseInt(animSpeedSlider.value);
 	await new Promise(resolve => setTimeout(resolve, animSpeedConst));
 
@@ -1885,7 +1909,22 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	for (let gen = startGeneration; gen < startGeneration + numGenerations; gen++) {
 		population.forEach(ind => calculateFitness(ind));
 		population.sort((a, b) => b.fitness - a.fitness);
-		
+
+		generationCount = gen - startGeneration;
+		const currentTime = performance.now();
+		const elapsedSeconds = (currentTime - startTime) / 1000;
+		const stepsPerSecond = generationCount / elapsedSeconds;
+
+		if (currentTime - lastUpdateTime > 1000) {
+			lastUpdateTime = currentTime;
+			const remainingGenerations = (startGeneration + numGenerations) - gen;
+			const remainingTime = remainingGenerations / stepsPerSecond;
+			
+			document.getElementById('elapsedTime').textContent = `${elapsedSeconds.toFixed(1)}s`;
+			document.getElementById('stepsPerSecond').textContent = `${stepsPerSecond.toFixed(1)} étapes/s`;
+			document.getElementById('remainingTime').textContent = `${remainingTime.toFixed(1)}s`;
+		}
+
 		let bestOfGen = population[0];
 		if (bestIndividualOfAllTime === null || bestOfGen.fitness > bestIndividualOfAllTime.fitness) {
 			bestIndividualOfAllTime = JSON.parse(JSON.stringify(bestOfGen));
@@ -1942,7 +1981,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 
 		population = newPopulation;
 		
-		statusMessage.textContent = `Génération ${gen + 1} / ${startGeneration + numGenerations} - Meilleure Fitness: ${Math.round(bestIndividualOfAllTime.fitness)}`;
+		statusMessage.innerHTML = `<div class='text-left'>Génération ${gen + 1} / ${startGeneration + numGenerations} - Meilleure Fitness: ${Math.round(bestIndividualOfAllTime.fitness)}</div>`;
 
 		if (gen % 5 === 0 || gen === numGenerations - 1) {
 			drawMaze();
@@ -1976,20 +2015,23 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	const meanPathLength = stats.pathLengths.reduce((a, b) => a + b, 0) / stats.pathLengths.length;
 	const improvementPercentage = (stats.improvementCount / totalGens) * 100;
 
-	let statsHTML = "";
-	if (meanFitness) {statsHTML += "Fitness moyenne: " + meanFitness.toFixed(2) + " | "}
-	if (stdDevFitness) {statsHTML += "Écart-type fitness: " + stdDevFitness.toFixed(2) + " | "}
-	if (stats.totalMutations) {statsHTML += "Mutations appliquées: " + stats.totalMutations + "<br>"}
-	if (stats.totalCrossovers) {statsHTML += "Croisements réalisés: " + stats.totalCrossovers + " | "}
-	if (meanPathLength) {statsHTML += "Profondeur moyenne des chemins: " + meanPathLength.toFixed(0) + " | "}
-	if (stats.totalEliminated) {statsHTML += "Individus éliminés: " + stats.totalEliminated + "<br>"}
-	if (improvementPercentage) {statsHTML += "Pourcentage de générations avec amélioration: " + improvementPercentage.toFixed(1) + "%"}
-
+	let statsHTML = "<div class='text-left space-y-2'>";
 	if (solutionFound) {
-		statusMessage.innerHTML = `Solution trouvée en ${totalGens} générations<br>${statsHTML}`;
+		statsHTML += `<div class='font-semibold'>Solution trouvée en ${totalGens} générations</div>`;
 	} else {
-		statusMessage.innerHTML = `Optimisation terminée - Aucune solution complète trouvée, augmentez la longueur maximale du chemin ou le nombre de générations.<br>${statsHTML}`;
+		statsHTML += `<div class='font-semibold'>Optimisation terminée - Aucune solution complète trouvée, augmentez la longueur maximale du chemin ou le nombre de générations.</div>`;
 	}
+
+	if (meanFitness) statsHTML += `<div>Fitness moyenne: ${meanFitness.toFixed(2)}</div>`;
+	if (stdDevFitness) statsHTML += `<div>Écart-type fitness: ${stdDevFitness.toFixed(2)}</div>`;
+	if (stats.totalMutations) statsHTML += `<div>Mutations appliquées: ${stats.totalMutations}</div>`;
+	if (stats.totalCrossovers) statsHTML += `<div>Croisements réalisés: ${stats.totalCrossovers}</div>`;
+	if (meanPathLength) statsHTML += `<div>Profondeur moyenne des chemins: ${meanPathLength.toFixed(0)}</div>`;
+	if (stats.totalEliminated) statsHTML += `<div>Individus éliminés: ${stats.totalEliminated}</div>`;
+	if (improvementPercentage) statsHTML += `<div>Pourcentage de générations avec amélioration: ${improvementPercentage.toFixed(1)}%</div>`;
+
+	statsHTML += "</div>";
+	statusMessage.innerHTML = statsHTML;
 
 	console.log("Statistiques détaillées:");
 	console.log("- Fitness moyenne: " + meanFitness.toFixed(2));
