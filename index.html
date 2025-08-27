@@ -64,6 +64,7 @@
 						
 						<div id="drawingTools" class="hidden border-t border-color pt-4 mt-4">
 							<label class="block text-sm font-medium text-gray-700">Outils de Dessin:</label>
+							<p class="text-xs text-gray-500 mt-1">Cliquez sur le canevas pour dessiner ou effacer des murs et utilisez la molette de souris pour changer directions et valeurs.</p>
 							<div class="flex space-x-2 mt-2">
 								<button id="setStartBtn" class="btn-secondary w-full py-2 px-4 rounded-lg transition-colors duration-200 mt-2" data-mode="start">
 									Définir le départ
@@ -91,7 +92,14 @@
 							<button id="clearMazeBtn" class="btn-secondary w-full py-2 px-4 rounded-lg transition-colors duration-200 mt-2">
 								Tout effacer
 							</button>
-							<p class="text-xs text-gray-500 mt-1">Cliquez sur le canevas pour dessiner ou effacer des murs.</p>
+							<div class="flex space-x-2 mt-2">
+								<button id="doubleResBtn" class="btn-secondary w-full py-2 px-4 rounded-lg transition-colors duration-200">
+									Doubler la résolution
+								</button>
+								<button id="halveResBtn" class="btn-secondary w-full py-2 px-4 rounded-lg transition-colors duration-200">
+									Réduire la résolution
+								</button>
+							</div>
 						</div>
 
 						<button id="generateBtn" class="w-full btn-secondary font-bold py-2 px-4 rounded-lg transition-colors duration-200">Générer un Labyrinthe</button>
@@ -154,45 +162,41 @@
 						<div class="border-t border-color pt-4 mt-4">
 							<h3 class="text-lg font-semibold mb-3 text-gray-800">Paramètres Avancés</h3>
 
-							<div class="border-t border-color pt-4 mt-4">
-								<h3 class="text-lg font-semibold mb-3 text-gray-800">Paramètres Avancés</h3>
+							<div class="control-group mt-4">
+								<div class="custom-checkbox-container">
+									<input type="checkbox" id="allowDiagonal" name="allowDiagonal" class="custom-checkbox-input">
+									<label for="allowDiagonal" class="custom-checkbox-label">
+										<span class="checkmark">
+											<svg viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+												<path d="M1 5L4 8L11 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+											</svg>
+										</span>
+										<span class="ml-2 text-sm font-medium text-gray-700">Autoriser les déplacements en diagonale</span>
+									</label>
+								</div>
+								<p class="text-xs text-gray-500 mt-1 ml-6">Permet aux individus de se déplacer en diagonale uniquement si les 4 cases concernées sont libres (pas de mur). Réduit la distance parcourue.</p>
+							</div>
 
-								<div class="control-group mt-4">
-									<div class="custom-checkbox-container">
-										<input type="checkbox" id="allowDiagonal" name="allowDiagonal" class="custom-checkbox-input">
-										<label for="allowDiagonal" class="custom-checkbox-label">
-											<span class="checkmark">
-												<svg viewBox="0 0 12 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-													<path d="M1 5L4 8L11 1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-												</svg>
-											</span>
-											<span class="ml-2 text-sm font-medium text-gray-700">Autoriser les déplacements en diagonale</span>
-										</label>
-									</div>
-									<p class="text-xs text-gray-500 mt-1 ml-6">Permet aux individus de se déplacer en diagonale uniquement si les 4 cases concernées sont libres (pas de mur). Réduit la distance parcourue.</p>
-								</div>
-
-								<div class="mt-4">
-									<label for="animSpeed" class="block text-sm font-medium text-gray-700">Vitesse d'animation: <span id="animSpeedValue" class="font-bold accent-color">10ms</span></label>
-									<input id="animSpeed" type="range" min="0" max="2000" step="10" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-									<p class="text-xs text-gray-500 mt-1">Contrôle la vitesse de visualisation de la résolution (n'affecte pas la vitesse de calcul).</p>
-								</div>
-								
-								<div class="mt-4">
-									<label for="crossoverRate" class="block text-sm font-medium text-gray-700">Taux de Croisement: <span id="crossoverRateValue" class="font-bold accent-color">80%</span></label>
-									<input id="crossoverRate" type="range" min="0" max="100" step="1" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
-									<p class="text-xs text-gray-500 mt-1">Probabilité que deux individus se reproduisent pour créer une nouvelle génération.</p>
-								</div>
-								
-								<div class="mt-4">
-									<label for="crossoverType" class="block text-sm font-medium text-gray-700">Type de Croisement:</label>
-									<select id="crossoverType" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-accent-color focus:border-accent-color">
-										<option value="singlePoint">Point unique</option>
-										<option value="twoPoint">Deux points</option>
-										<option value="uniform">Uniforme</option>
-									</select>
-									<p class="text-xs text-gray-500 mt-1">Méthode utilisée pour combiner les gènes des parents lors de la reproduction.</p>
-								</div>
+							<div class="mt-4">
+								<label for="animSpeed" class="block text-sm font-medium text-gray-700">Vitesse d'animation: <span id="animSpeedValue" class="font-bold accent-color">10ms</span></label>
+								<input id="animSpeed" type="range" min="0" max="2000" step="10" value="10" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<p class="text-xs text-gray-500 mt-1">Contrôle la vitesse de visualisation de la résolution (n'affecte pas la vitesse de calcul).</p>
+							</div>
+							
+							<div class="mt-4">
+								<label for="crossoverRate" class="block text-sm font-medium text-gray-700">Taux de Croisement: <span id="crossoverRateValue" class="font-bold accent-color">80%</span></label>
+								<input id="crossoverRate" type="range" min="0" max="100" step="1" value="80" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider">
+								<p class="text-xs text-gray-500 mt-1">Probabilité que deux individus se reproduisent pour créer une nouvelle génération.</p>
+							</div>
+							
+							<div class="mt-4">
+								<label for="crossoverType" class="block text-sm font-medium text-gray-700">Type de Croisement:</label>
+								<select id="crossoverType" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-accent-color focus:border-accent-color">
+									<option value="singlePoint">Point unique</option>
+									<option value="twoPoint">Deux points</option>
+									<option value="uniform">Uniforme</option>
+								</select>
+								<p class="text-xs text-gray-500 mt-1">Méthode utilisée pour combiner les gènes des parents lors de la reproduction.</p>
 							</div>
 							
 							<div class="mt-4">

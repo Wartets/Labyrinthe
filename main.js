@@ -372,6 +372,26 @@ function updateMazeSizeInfo() {
 	}
 }
 
+function doubleResolution() {
+    if (size * 2 > 101) return;
+    const newSize = size * 2;
+    mazeSizeSlider.value = newSize;
+    mazeSizeValue.textContent = `${newSize}x${newSize}`;
+    resizeMaze(newSize);
+    drawMaze();
+    statusMessage.textContent = `Résolution doublée : ${newSize}x${newSize}`;
+}
+
+function halveResolution() {
+    if (size / 2 < 5) return;
+    const newSize = Math.floor(size / 2);
+    mazeSizeSlider.value = newSize;
+    mazeSizeValue.textContent = `${newSize}x${newSize}`;
+    resizeMaze(newSize);
+    drawMaze();
+    statusMessage.textContent = `Résolution réduite : ${newSize}x${newSize}`;
+}
+
 function generateMazeDFS(width, height, opennessPercent, currentMazeSeed) {
 	setSeed(currentMazeSeed);
 
@@ -1256,6 +1276,9 @@ function initNewMaze() {
 	drawMaze();
 	statusMessage.textContent = ""; 
 }
+
+document.getElementById('doubleResBtn').addEventListener('click', doubleResolution);
+document.getElementById('halveResBtn').addEventListener('click', halveResolution);
 
 generateBtn.addEventListener('click', () => {
 	const selectedAlgorithm = mazeAlgorithmSelect.value;
