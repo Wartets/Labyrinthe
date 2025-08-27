@@ -1281,20 +1281,6 @@ function initNewMaze() {
 	drawMaze(); 
 }
 
-Object.defineProperty(statusMessage, 'autoHideContent', {
-    set: function(value) {
-        this.innerHTML = value;
-        if (!value.trim()) {
-            statusContainer.classList.add('hidden');
-        } else {
-            statusContainer.classList.remove('hidden');
-        }
-    },
-    get: function() {
-        return this.innerHTML;
-    }
-});
-
 document.getElementById('doubleResBtn').addEventListener('click', doubleResolution);
 document.getElementById('halveResBtn').addEventListener('click', halveResolution);
 
