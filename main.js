@@ -60,7 +60,8 @@ const progressWeightSlider = document.getElementById('progressWeight');
 const progressWeightValue = document.getElementById('progressWeightValue');
 const collisionPenaltySlider = document.getElementById('collisionPenalty');
 const collisionPenaltyValue = document.getElementById('collisionPenaltyValue');
-const allowDiagonalCheckbox = document.getElementById('allowDiagonal');
+let allowDiagonalCheckbox;
+allowDiagonalCheckbox = document.getElementById('allowDiagonal');
 
 const PATH = 0;
 const WALL = 1;
@@ -1522,6 +1523,11 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	solveBtn.disabled = true;
 	continueBtn.disabled = true;
 	generateBtn.disabled = true;
+	
+    if (allowDiagonalCheckbox) {
+        allowDiagonalCheckbox.disabled = true;
+    }
+	
 	solveBtn.textContent = startGeneration === 0 ? "Résolution en cours..." : "Reprise en cours...";
 	solveBtn.classList.replace('btn-primary', 'btn-secondary');
 	statusMessage.textContent = startGeneration === 0 ? "Initialisation de l'algorithme..." : "Reprise de l'algorithme...";
@@ -1551,6 +1557,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	const fitnessHistory = [];
 
 	function createIndividual() {
+		const allowDiagonal = allowDiagonalCheckbox ? allowDiagonalCheckbox.checked : false;
 		const moves = allowDiagonal ? 
 			['N', 'E', 'S', 'W', 'NE', 'SE', 'SW', 'NW'] : 
 			['N', 'E', 'S', 'W'];
@@ -1586,7 +1593,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 			}
 		}
 
-		// Définir les mouvements possibles en fonction de l'option allowDiagonal
+		const allowDiagonal = allowDiagonalCheckbox ? allowDiagonalCheckbox.checked : false;
 		const moves = allowDiagonal ? 
 			['N', 'E', 'S', 'W', 'NE', 'SE', 'SW', 'NW'] : 
 			['N', 'E', 'S', 'W'];
@@ -1974,6 +1981,11 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	solveBtn.disabled = false;
 	continueBtn.disabled = false;
 	generateBtn.disabled = false;
+	
+    if (allowDiagonalCheckbox) {
+        allowDiagonalCheckbox.disabled = false;
+    }
+	
 	solveBtn.textContent = "Résoudre";
 	solveBtn.classList.replace('btn-secondary', 'btn-primary');
 	
@@ -2023,7 +2035,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	solveBtn.classList.replace('btn-secondary', 'btn-primary');
 
 	lastRunState = {
-		population: population,
+		population: population || null,
 		bestIndividual: bestIndividualOfAllTime,
 		generation: numGenerations,
 		maze: JSON.stringify(maze)
