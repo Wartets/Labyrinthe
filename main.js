@@ -75,19 +75,20 @@ const directionArrows = { 'north': '↓', 'east': '←', 'south': '↑', 'west':
 let allowDiagonal = false;
 
 let maze, start, end, size;
-let cellSize;
 
+let stopRequested = false;
+let updateInterval = null;
 let isSolving = false;
 let drawingMode = null;
 let isDrawing = false;
+let lastRunState = null;
 
 let startTime = 0;
 let lastUpdateTime = 0;
 let generationCount = 0;
 
 let lastCell = null;
-
-let lastRunState = null;
+let cellSize;
 
 let currentSeed = Date.now();
 
@@ -1390,6 +1391,10 @@ clearMazeBtn.addEventListener('click', () => {
 	setEndBtn.classList.replace('btn-primary', 'btn-secondary');
 });
 
+document.getElementById('stopBtn').addEventListener('click', () => {
+	stopRequested = true;
+});
+
 function getCellCoordinates(event) {
 	const rect = canvas.getBoundingClientRect();
 	const scaleX = canvas.width / rect.width;
@@ -1549,6 +1554,8 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	lastUpdateTime = startTime;
 	generationCount = 0;
 	document.getElementById('progressInfo').classList.remove('hidden');
+	stopRequested = false;
+	document.getElementById('stopBtn').style.display = 'block';
 
 	isSolving = true;
 	solveBtn.disabled = true;
@@ -1648,7 +1655,6 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 				nextPos.x--;
 				moved = true;
 			} else if (allowDiagonal) {
-				// Mouvements diagonaux
 				if (move === 'NE') { 
 					nextPos.x++; nextPos.y--;
 					moved = true;
@@ -1671,7 +1677,6 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 				continue;
 			}
 
-			// Pour les mouvements diagonaux, vérifier que les cases intermédiaires sont libres
 			if (allowDiagonal && (move === 'NE' || move === 'SE' || move === 'SW' || move === 'NW')) {
 				const adj1X = move === 'NE' || move === 'SE' ? pos.x + 1 : pos.x - 1;
 				const adj1Y = pos.y;
@@ -1705,8 +1710,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 					move === 'N' ? 'south' :
 					move === 'W' ? 'east' :
 					move === 'E' ? 'west' :
-					// Pour les diagonales, on considère la direction principale
-					move === 'NE' ? 'east' : // Approximation
+					move === 'NE' ? 'east' :
 					move === 'SE' ? 'east' :
 					move === 'SW' ? 'west' :
 					'west';
@@ -1892,24 +1896,32 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	
 	let bestIndividualOfAllTime = initialBest;
 
+	updateInterval = setInterval(() => {
+		if (!isSolving) return;
+		const currentTime = performance.now();
+		const elapsedSeconds = (currentTime - startTime) / 1000;
+		const stepsPerSecond = generationCount / elapsedSeconds;
+		
+		document.getElementById('elapsedTime').textContent = `${elapsedSeconds.toFixed(1)}s`;
+		document.getElementById('stepsPerSecond').textContent = `${stepsPerSecond.toFixed(1)} étapes/s`;
+		
+		if (stepsPerSecond > 0) {
+			const totalGenerations = parseInt(generationsSlider.value);
+			const remainingGenerations = totalGenerations - generationCount;
+			const remainingTime = remainingGenerations / stepsPerSecond;
+			document.getElementById('remainingTime').textContent = `${remainingTime.toFixed(1)}s`;
+		}
+	}, 100);
+
 	for (let gen = startGeneration; gen < startGeneration + numGenerations; gen++) {
+		if (stopRequested) {
+			break;
+		}
+
 		population.forEach(ind => calculateFitness(ind));
 		population.sort((a, b) => b.fitness - a.fitness);
 
 		generationCount = gen - startGeneration;
-		const currentTime = performance.now();
-		const elapsedSeconds = (currentTime - startTime) / 1000;
-		const stepsPerSecond = generationCount / elapsedSeconds;
-
-		if (currentTime - lastUpdateTime > 1000) {
-			lastUpdateTime = currentTime;
-			const remainingGenerations = (startGeneration + numGenerations) - gen;
-			const remainingTime = remainingGenerations / stepsPerSecond;
-			
-			document.getElementById('elapsedTime').textContent = `${elapsedSeconds.toFixed(1)}s`;
-			document.getElementById('stepsPerSecond').textContent = `${stepsPerSecond.toFixed(1)} étapes/s`;
-			document.getElementById('remainingTime').textContent = `${remainingTime.toFixed(1)}s`;
-		}
 
 		let bestOfGen = population[0];
 		if (bestIndividualOfAllTime === null || bestOfGen.fitness > bestIndividualOfAllTime.fitness) {
@@ -1984,6 +1996,9 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 		};
 	}
 
+	clearInterval(updateInterval);
+	document.getElementById('stopBtn').style.display = 'none';
+
 	drawMaze();
 	const finalPath = calculateFitness(bestIndividualOfAllTime);
 	drawPath(finalPath, 'rgba(179, 54, 156, 0.7)');
@@ -2048,7 +2063,6 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	};
 	continueBtn.style.display = 'block';
 }
-
 solveBtn.addEventListener('click', async () => {
 	continueBtn.style.display = 'none';
 	stats = createGeneticAlgorithmContext();
