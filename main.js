@@ -379,23 +379,23 @@ function updateMazeSizeInfo() {
 }
 
 function doubleResolution() {
-    if (size * 2 > 101) return;
-    const newSize = size * 2;
-    mazeSizeSlider.value = newSize;
-    mazeSizeValue.textContent = `${newSize}x${newSize}`;
-    resizeMaze(newSize);
-    drawMaze();
-    statusMessage.autoHideContent = `Résolution doublée : ${newSize}x${newSize}`;
+	if (size * 2 > 101) return;
+	const newSize = size * 2;
+	mazeSizeSlider.value = newSize;
+	mazeSizeValue.textContent = `${newSize}x${newSize}`;
+	resizeMaze(newSize);
+	drawMaze();
+	statusMessage.autoHideContent = `Résolution doublée : ${newSize}x${newSize}`;
 }
 
 function halveResolution() {
-    if (size / 2 < 5) return;
-    const newSize = Math.floor(size / 2);
-    mazeSizeSlider.value = newSize;
-    mazeSizeValue.textContent = `${newSize}x${newSize}`;
-    resizeMaze(newSize);
-    drawMaze();
-    statusMessage.autoHideContent = `Résolution réduite : ${newSize}x${newSize}`;
+	if (size / 2 < 5) return;
+	const newSize = Math.floor(size / 2);
+	mazeSizeSlider.value = newSize;
+	mazeSizeValue.textContent = `${newSize}x${newSize}`;
+	resizeMaze(newSize);
+	drawMaze();
+	statusMessage.autoHideContent = `Résolution réduite : ${newSize}x${newSize}`;
 }
 
 function generateMazeDFS(width, height, opennessPercent, currentMazeSeed) {
@@ -1395,12 +1395,12 @@ document.getElementById('stopBtn').addEventListener('click', () => {
 	stopRequested = true;
 });
 
-function getCellCoordinates(event) {
+function getCellCoordinates(input) {
 	const rect = canvas.getBoundingClientRect();
-	const scaleX = canvas.width / rect.width;
-	const scaleY = canvas.height / rect.height;
-	const x = Math.floor(((event.clientX - rect.left) * scaleX) / cellSize);
-	const y = Math.floor(((event.clientY - rect.top) * scaleY) / cellSize);
+	const clientX = input.clientX || input.touches[0].clientX;
+	const clientY = input.clientY || input.touches[0].clientY;
+	const x = Math.floor((clientX - rect.left) / cellSize);
+	const y = Math.floor((clientY - rect.top) / cellSize);
 	return { x, y };
 }
 
@@ -1507,6 +1507,89 @@ canvas.addEventListener('mouseup', () => {
 });
 
 canvas.addEventListener('mouseleave', () => {
+	isDrawing = false;
+	lastCell = null;
+});
+
+canvas.addEventListener('touchstart', (e) => {
+	e.preventDefault();
+	if (mazeAlgorithmSelect.value === 'manual' && drawingMode) {
+		continueBtn.style.display = 'none';
+		isDrawing = true;
+		const touch = e.touches[0];
+		const { x, y } = getCellCoordinates(touch);
+		lastCell = { x, y };
+		
+		if (x >= 0 && x < size && y >= 0 && y < size) {
+			if (drawingMode === 'start' || drawingMode === 'end') {
+				if (maze[y][x] !== WALL) {
+					if (drawingMode === 'start') {
+						maze[start.y][start.x] = PATH;
+						start = { x, y };
+					} else {
+						maze[end.y][end.x] = PATH;
+						end = { x, y };
+					}
+					maze[y][x] = PATH;
+					drawMaze();
+					setStartBtn.classList.replace('btn-primary', 'btn-secondary');
+					setEndBtn.classList.replace('btn-primary', 'btn-secondary');
+				}
+				return;
+			}
+			
+			if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
+				return;
+			}
+			
+			if (drawingMode === 'wall') {
+				maze[y][x] = WALL;
+			} else if (drawingMode === 'path') {
+				maze[y][x] = PATH;
+			} else if (drawingMode === 'one_way') {
+				maze[y][x] = { type: ONE_WAY, direction: 'north' };
+			} else if (drawingMode === 'limited') {
+				maze[y][x] = { type: LIMITED_PASS, passes: 1 };
+			}
+			drawMaze();
+		}
+	}
+});
+
+canvas.addEventListener('touchmove', (e) => {
+	e.preventDefault();
+	if (isDrawing && drawingMode && drawingMode !== 'start' && drawingMode !== 'end') {
+		const touch = e.touches[0];
+		const { x, y } = getCellCoordinates(touch);
+		
+		if (lastCell && lastCell.x === x && lastCell.y === y) return;
+		lastCell = { x, y };
+		
+		if (x >= 0 && x < size && y >= 0 && y < size) {
+			if ((x === start.x && y === start.y) || (x === end.x && y === end.y)) {
+				return;
+			}
+			
+			if (drawingMode === 'wall') {
+				maze[y][x] = WALL;
+			} else if (drawingMode === 'path') {
+				maze[y][x] = PATH;
+			} else if (drawingMode === 'one_way') {
+				maze[y][x] = { type: ONE_WAY, direction: 'north' };
+			} else if (drawingMode === 'limited') {
+				maze[y][x] = { type: LIMITED_PASS, passes: 1 };
+			}
+			drawMaze();
+		}
+	}
+});
+
+canvas.addEventListener('touchend', () => {
+	isDrawing = false;
+	lastCell = null;
+});
+
+canvas.addEventListener('touchcancel', () => {
 	isDrawing = false;
 	lastCell = null;
 });
@@ -2063,6 +2146,7 @@ async function runGeneticAlgorithm(startGeneration = 0, initialPopulation = null
 	};
 	continueBtn.style.display = 'block';
 }
+
 solveBtn.addEventListener('click', async () => {
 	continueBtn.style.display = 'none';
 	stats = createGeneticAlgorithmContext();
